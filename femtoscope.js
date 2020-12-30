@@ -1,3 +1,133 @@
+// Oscar Saharoy 2020
+
+const connectButton = document.getElementById("connect");
+
+var serialPort   = null;
+var serialReader = null;
+ 
+async function connectToSerial( event ) {
+
+    // temporarily disable button and change message on it
+    connectButton.onclick   = null;
+    connectButton.innerHTML = "connecting 🤔";
+
+    // try to get a serial port to connect to
+    try {
+
+        serialPort = await navigator.serial.requestPort();
+
+        console.log("got port!");
+
+        await serialPort.open({ baudRate: 57600 });
+
+        console.log("opened port!");
+
+        serialReader = serialPort.readable.getReader();
+
+        console.log("got reader!");
+
+        connectButton.innerHTML = "connected 😄 click to disconnect";
+        connectButton.onclick   = disconnectFromSerial;
+    }
+    catch {
+
+        // error occurs when user doesn't select a serial port
+
+        console.log("failed to connect :(");
+
+        // reset button and exit function
+
+        connectButton.innerHTML = "connect to serial 🔌";
+        connectButton.onclick   = connectToSerial;
+        return;
+    }
+
+    await collectData(serialReader);
+};
+
+async function disconnectFromSerial( event ) {
+
+    await serialReader.cancel();
+    await serialPort.close();
+
+    console.log("disconnected successfully!");
+    
+    connectButton.innerHTML = "connect to serial 🔌";
+    connectButton.onclick   = connectToSerial;
+}
+
+connectButton.onclick = connectToSerial;
+
+
+var dofft = false;
+const fftButton = document.getElementById("fft");
+fftButton.onclick = togglefft;
+
+function togglefft( event ) {
+
+    dofft = !dofft;
+    fftButton.innerHTML = dofft ? "show waveform" : "show frequency spectrum";
+
+    updateGraphPoints();
+}
+
+const maxStat        = document.getElementById("max-stat");
+const minStat        = document.getElementById("min-stat");
+const peakToPeakStat = document.getElementById("peak-to-peak-stat");
+const rmsStat        = document.getElementById("rms-stat");
+const dcAverageStat  = document.getElementById("dc-average-stat");
+const frequencyStat  = document.getElementById("frequency-stat");
+
+const indexOfMaxFreq = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 10) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
+const getRMS         = arr => ( arr.reduce( (Sx2, x)     => Sx2 + x*x, 0 ) / arr.length ) ** 0.5
+const getDCAverage   = arr =>   arr.reduce( (Sx, x)      => Sx + x,    0 ) / arr.length
+
+function updateStats() {
+
+    const maxValue   = Math.max( ...points );
+    const minValue   = Math.min( ...points );
+    const p2pValue   = maxValue - minValue;
+    const rmsValue   = getRMS( points );
+    const dcAvgValue = getDCAverage( points );
+    const freqValue  = indexOfMaxFreq( pointsfft );
+
+    maxStat.innerHTML        = maxValue.toPrecision(3)   + "v";
+    minStat.innerHTML        = minValue.toPrecision(3)   + "v";
+    peakToPeakStat.innerHTML = p2pValue.toPrecision(3)   + "v";
+    rmsStat.innerHTML        = rmsValue.toPrecision(3)   + "v";
+    dcAverageStat.innerHTML  = dcAvgValue.toPrecision(3) + "v";
+    frequencyStat.innerHTML  = freqValue.toString()      + "Hz";
+}
+
+function updateGraphPoints() {
+
+    const pointsToUse = dofft ? pointsfft : points;
+
+    var n = 0;
+    graphjs.points = pointsToUse.map( x => new vec2(n++, x) );
+}
+
+
+
+const divider = document.getElementById("divider");
+var dividerClicked = false;
+
+divider.addEventListener(  "mousedown",  (e) => { dividerClicked = true;  } );
+document.addEventListener( "mouseup",    (e) => { dividerClicked = false; } );
+document.addEventListener( "mouseleave", (e) => { dividerClicked = false; } );
+document.addEventListener( "mousemove", windowMousemove );
+
+function windowMousemove( event ) {
+
+    if( !dividerClicked ) return;
+
+    document.body.style.gridTemplateColumns = event.clientX.toString() + "px 1rem auto";
+
+    graphjs.resize();
+}
+
+
+
 
 const graphjs = new Graph("graphjs");
 graphjs.pointDrawingFunction = () => {};
@@ -5,14 +135,14 @@ graphjs.pointDrawingFunction = () => {};
 graphjs.setXRange(-400, 9000);
 graphjs.setYRange(-1,   5);
 
-const isWellFormed = stri => /end|(\d\.\d+)/.test(stri)
-const SAMPLERATE   = 1000; // Hz
+const SAMPLERATE   = 10000; // Hz
 const N_SAMPLES    = 8192;
 
-const button = document.getElementById("button");
-button.style.display = "grid";
+//const button = document.getElementById("button");
+//button.style.display = "grid";
 
-var points = [];
+var points    = [];
+var pointsfft = [];
 
 const windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
 
@@ -25,40 +155,8 @@ function padZeros( inputSignal, N = null ) {
 
     return [ ...inputSignal ].concat( new Array( numberOfZeros ).fill(0) );
 }
- 
-button.onclick = async event => {
 
-    button.onclick = null;
-    button.style.display = "none";
-
-    port = await navigator.serial.requestPort();
-
-    console.log("got port!")
-
-    await port.open({ baudRate: 460800 });
-
-    console.log("opened port!");
-
-    const textDecoder = new TextDecoderStream();
-    const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
-    const reader = textDecoder.readable.getReader();
-
-    console.log("got reader!");
-
-    await collectData(reader);
-};
-
-function drawFreqSpectrum() {
-
-    const pointsfft = fft( padZeros(points, N_SAMPLES).map( (x, i, arr) => x * windowFunction(i, arr.length) ) );
-
-    var n = 0;
-    graphjs.points = pointsfft.map( x => new vec2(n++ * 6.283185 * SAMPLERATE / points.length, x / 0.53836) );
-
-    points = [];
-
-    graphjs.redraw();
-}
+var pointsCollected = 0;
 
 async function collectData(reader) {
     
@@ -67,41 +165,39 @@ async function collectData(reader) {
     // listen to data coming from the serial device
     while (true) {
 
-        const { value, done } = await reader.read();
-        var strings = value.split("\n");
+        const { value, done } = await serialReader.read();
 
-        if( !strings ) continue;
+        if (done) {
 
-        if(halfstring) strings = [halfstring + strings[0], ...strings];
+            // allow the serial port to be closed
+            serialReader.releaseLock();
+            console.log("serial port lost...");
 
-        halfstring = !isWellFormed( strings[strings.length-1] ) ? strings.pop() : null;
+            break;
+        }
 
-        const newPoints = strings.filter( isWellFormed ).map( parseFloat );
-        //graphjs.addPoints( newPoints.map( x => new vec2(n++ / SAMPLERATE, x) ) );
+        var newPoints = Array.from(value).map( x => x/256.0 );
         points = points.concat( newPoints );
 
         if(points.length > N_SAMPLES) points = points.splice( points.length - N_SAMPLES );
 
-        var n = 0;
-        graphjs.points = points.map( x => new vec2(n++, x) );
+        pointsCollected += newPoints.length;
 
-        graphjs.redraw();
+        if(pointsCollected >= N_SAMPLES) {
 
-        if( strings[strings.length-1][0] === "F" ) drawFreqSpectrum();
+            pointsCollected = 0;
+            processData();
+        }
     }
 }
 
-var currentTime = null;
+function processData() {
 
-async function scroll( time ) {
-    
-    if(currentTime)
-        graphjs.originOffset.x -= ( time - currentTime ) / 1000;
-    
-    currentTime = time;
-    graphjs.redraw();
+    console.log("processing data...");
 
-    requestAnimationFrame( scroll );
+    const windowedPoints = points.map( (x, i, arr) => x * windowFunction(i, arr.length) );
+    pointsfft = fft( windowedPoints );
+
+    updateStats();
+    updateGraphPoints();
 }
-
-//requestAnimationFrame( scroll );

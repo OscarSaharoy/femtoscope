@@ -2,16 +2,48 @@
 <html>
 
 <head>
-	<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@100..700&display=swap" rel="stylesheet">
+    <link href="femtoscope.css" rel="stylesheet">
+    <title> ⚡ femtoscope ⚡ </title>
 </head>
 
-<body style="margin:0; padding:0; overflow: hidden; display: grid">
+<body>
 
-    <div id="button" style="width:100vw; height:100vh; display: grid; cursor: pointer; justify-items: center; align-items: center; grid-row: 1;"> 
-    	<p style="display: grid; font-size: 2rem; font-family: 'Roboto Mono';"> Connect to Serial </p> 
+    <canvas width=1 height=1 id="graphjs"> </canvas>
+
+    <div id="divider"> </div>
+
+    <div id="control-panel">
+        
+        <h1 style="margin-bottom: 1rem;"> femto<strong>scope</strong> </h1>
+
+        <button id="connect"> connect to serial 🔌 </button>
+
+        <div id="stats">
+
+            <div class="left">
+                <p> max </p>
+                <p> min </p>
+                <p> peak to peak </p>
+                <p> rms </p>
+                <p> dc average </p>
+                <p> frequency</p>
+            </div>
+
+            <div class="right">
+                <p id="max-stat"> - </p>
+                <p id="min-stat"> - </p>
+                <p id="peak-to-peak-stat"> - </p>
+                <p id="rms-stat"> - </p>
+                <p id="dc-average-stat"> - </p>
+                <p id="frequency-stat"> - </p>
+            </div>
+        </div>
+
+        <button id="fft"> show frequency spectrum </button>
+    
     </div>
-
-    <canvas width=1 height=1 id="graphjs" style="width:100vw; height:100vh; display: grid; grid-row: 2;"> </canvas>
 
     <script type="text/javascript" src="../graph.js/vec2.js"> </script>
     <script type="text/javascript" src="../graph.js/graph.js"> </script>

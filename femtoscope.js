@@ -99,6 +99,7 @@ function togglefft( event ) {
     fftButton.innerHTML = showfft ? "show waveform 🌊" : "show frequency spectrum 🎵";
 
     updateGraphPoints();
+    fitToData();
 }
 
 
@@ -112,7 +113,7 @@ const dcAverageStat  = document.getElementById("dc-average-stat");
 const frequencyStat  = document.getElementById("frequency-stat");
 
 // some helper functions that find some of the stats
-const indexOfMaxFreq = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 10) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
+const indexOfMaxFreq = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 4) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
 const getRMS         = arr => ( arr.reduce( (Sx2, x)     => Sx2 + x*x, 0 ) / arr.length ) ** 0.5
 const getDCAverage   = arr =>   arr.reduce( (Sx, x)      => Sx + x,    0 ) / arr.length
 
@@ -188,7 +189,7 @@ function windowMousemove( event ) {
 
     if( !dividerClicked ) return;
 
-    // change the body's column template - change amount of screen that is graph/ui
+    // change the body's column template - change amount of screen that is graph/UI
     document.body.style.gridTemplateColumns = event.clientX.toString() + "px 1rem auto";
 
     graphjs.resize();
@@ -197,15 +198,48 @@ function windowMousemove( event ) {
 
 
 
+// get max and min in x and y
+function compareExtents( extents, p ) {
+
+    return { top:    Math.max( p.y, extents.top    ), 
+             right:  Math.max( p.x, extents.right  ), 
+             bottom: Math.min( p.y, extents.bottom ), 
+             left:   Math.min( p.x, extents.left   ) };
+}
+
+// apply compareExtents across arr to get the max and min values
+const getExtents = arr => arr.reduce( compareExtents, { top:   -Infinity, 
+                                                        right: -Infinity, 
+                                                        bottom: Infinity, 
+                                                        left:   Infinity } );
+
+function fitToData() {
+
+    // get the extents of the graph data
+    const extents    = getExtents( graphjs.points );
+
+    // some conditions that mean we shouldn't try to resize the graph
+    const badResult  = graphjs.points.length < 2 || extents.bottom == Infinity || extents.left == Infinity || extents.top == extents.bottom || extents.right == extents.left;
+    if(badResult) return;
+ 
+    // get centre, topright and bottomleft points
+    const centre     = new vec2( (extents.right + extents.left) / 2, (extents.top + extents.bottom) / 2 );
+    const topRight   = new vec2( extents.right, extents.top    );
+    const bottomLeft = new vec2( extents.left,  extents.bottom );
+
+    // set the graph range with these, calling vec2.lerp to give some padding to the data on the graph
+    graphjs.setRange( vec2.lerp( centre, bottomLeft, 1.2 ), vec2.lerp( centre, topRight, 1.2 ) );
+}
 
 
-// get the graph and diable drawing points
+
+
+// get the graph
 const graphjs = new Graph("graphjs");
-graphjs.pointDrawingFunction = () => {};
 
 // constants to do with data collection
 const SAMPLERATE = 10000; // Hz
-const N_SAMPLES  = 8192;
+const N_SAMPLES  = 2048;
 
 // data points array and the frequency spectrum of it
 var points    = [];

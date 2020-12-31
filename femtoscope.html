@@ -33,7 +33,11 @@
 
         <button id="connect"> connect to serial 🔌 </button>
 
+        <button id="fft"> show frequency spectrum 🎵 </button>
+
         <div id="stats">
+
+        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> waveform stats </h2>
 
             <div class="left">
                 <p> max </p>
@@ -53,9 +57,30 @@
                 <p id="frequency-stat"> - </p>
             </div>
         </div>
-
-        <button id="fft"> show frequency spectrum 🎵 </button>
         <button id="add-ruler"> add a ruler 📏 </button>
+
+        <div id="stats">
+
+        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> ruler stats </h2>
+
+            <div class="left">
+            	<p> start </p>
+            	<p> end </p>
+                <p> dx </p>
+                <p> dy </p>
+                <p> length </p>
+                <p> gradient </p>
+            </div>
+
+            <div class="right">
+            	<p id="start-stat"> - </p>
+            	<p id="end-stat"> - </p>
+                <p id="dx-stat"> - </p>
+                <p id="dy-stat"> - </p>
+                <p id="length-stat"> - </p>
+                <p id="gradient-stat"> - </p>
+            </div>
+        </div>
     
     </div>
 

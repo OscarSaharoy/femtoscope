@@ -151,7 +151,29 @@ function updateGraphPoints() {
 const addRulerButton   = document.getElementById("add-ruler");
 addRulerButton.onclick = addRuler;
 
-const cancelOnEsc = e => { if(e.key == "Escape") cancelRuler() };
+// 2 vec2s that hold the start and end of the ruler
+var rulerStart = new vec2(0, 0);
+var rulerEnd   = new vec2(0, 0);
+
+// true while the ruler is being added
+var addingRuler = false;
+var rulerAdded  = false;
+
+// html elements that have the numeric values for the ruler stats
+const startStat    = document.getElementById("start-stat");
+const endStat      = document.getElementById("end-stat");
+const dxStat       = document.getElementById("dx-stat");
+const dyStat       = document.getElementById("dy-stat");
+const lengthStat   = document.getElementById("length-stat");
+const gradientStat = document.getElementById("gradient-stat");
+
+function cancelRulerOnEsc(event) {
+    
+    if( event.key != "Escape" ) return;
+        
+    rulerAdded = false;
+    endRuler();
+}
 
 function addRuler() {
 
@@ -159,19 +181,137 @@ function addRuler() {
     addRulerButton.innerHTML = "adding a ruler... (click and drag on graph)";
     addRulerButton.onclick   = cancelRuler;
 
-    // event listener to call cancelruler on pressing esc
-    window.addEventListener( "keydown", cancelOnEsc );
+    // event listener to call endRuler on pressing esc
+    window.addEventListener( "keydown", cancelRulerOnEsc );
+
+    rulerStart = graphjs.mousePos;
+    rulerEnd   = vec2.notANumber();
+    graphjs.canvas.addEventListener( "click", setFirstRulerPoint );
+
+    // prevent graph panning
+    graphjs.preventPanning = true;
+
+    // set the graphjs user function to the drawRuler function
+    graphjs.userFunction = drawRuler;
+
+    addingRuler = true;
 }
 
-function cancelRuler() {
+function cancelRuler(event) {
+
+    rulerAdded = false;
+    endRuler();
+}
+
+function endRuler() {
 
     // reset the add ruler button to normal so it adds a ruler
     addRulerButton.innerHTML = "add a ruler 📏";
     addRulerButton.onclick   = addRuler;
 
     // remove the event listener that calls this function on pressing esc
-    window.removeEventListener( "keydown", cancelOnEsc );
+    window.removeEventListener( "keydown", cancelRulerOnEsc );
+    graphjs.canvas.removeEventListener( "click", setFirstRulerPoint  );
+    graphjs.canvas.removeEventListener( "click", setSecondRulerPoint );
+
+    // re enable graph panning and set addingRuler flag
+    graphjs.preventPanning = false;
+    addingRuler = false;
 }
+
+function updateRulerStats() {
+
+    if( isNaN(rulerEnd.x) ) {
+
+        startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "v, " + rulerStart.y.toPrecision(3) + "v";
+        endStat.innerHTML      = "-";
+        dxStat.innerHTML       = "-";
+        dyStat.innerHTML       = "-";
+        lengthStat.innerHTML   = "-";
+        gradientStat.innerHTML = "-";
+
+        return;
+    }
+
+    // get all the stats from the ruler endpoints
+    const dxValue       = rulerEnd.x - rulerStart.x;
+    const dyValue       = rulerEnd.y - rulerStart.y;
+    const lengthValue   = ( dxValue**2 + dyValue**2 ) ** 0.5;
+    const gradientValue = dyValue / dxValue;
+
+    // add the values into the html
+    startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "v, " + rulerStart.y.toPrecision(3) + "v";
+    endStat.innerHTML      = rulerEnd.x.toPrecision(3)    + "v, " + rulerEnd.y.toPrecision(3)   + "v";
+    dxStat.innerHTML       = dxValue.toPrecision(3)       + "v";
+    dyStat.innerHTML       = dyValue.toPrecision(3)       + "v";
+    lengthStat.innerHTML   = lengthValue.toPrecision(3)   + "v";
+    gradientStat.innerHTML = gradientValue.toPrecision(3);
+}
+
+function setFirstRulerPoint( event ) {
+
+    rulerStart = vec2.clone( graphjs.mousePos );
+    rulerEnd   = graphjs.mousePos;
+
+    graphjs.canvas.removeEventListener( "click", setFirstRulerPoint  );
+    graphjs.canvas.addEventListener(    "click", setSecondRulerPoint );
+}
+
+function setSecondRulerPoint( event ) {
+
+    rulerEnd = vec2.clone( graphjs.mousePos );
+
+    graphjs.canvas.removeEventListener( "click", setSecondRulerPoint );
+
+    rulerAdded = true;
+    endRuler();
+}
+
+function drawRuler( graph ) {
+
+    // only draw something if the ruler is being added or is added
+    if( !addingRuler && !rulerAdded ) return;
+
+    const ctx = graph.ctx;
+    const rulerStartOnCanvas = graphjs.graphToCanvas( rulerStart );
+    const rulerEndOnCanvas   = graphjs.graphToCanvas( rulerEnd   );
+
+    if(addingRuler) {
+
+        graph.ctx.strokeStyle = "#888888";
+        graph.ctx.lineWidth = 1;
+        graph.ctx.setLineDash([6, 6]);
+
+        graph.drawVerticalLine(   graph.mousePosOnCanvas.x );
+        graph.drawHorizontalLine( graph.mousePosOnCanvas.y );
+
+        updateRulerStats();
+    }
+
+    graph.ctx.strokeStyle = "#54f330";
+    graph.ctx.lineWidth = 3;
+    graph.ctx.setLineDash([]);    
+
+    ctx.beginPath();
+    ctx.moveTo( rulerStartOnCanvas.x, rulerStartOnCanvas.y );
+    ctx.lineTo( rulerEndOnCanvas.x,   rulerEndOnCanvas.y   );
+    ctx.stroke();
+
+    graph.ctx.lineWidth   = 5;
+    graph.ctx.fillStyle   = "white";
+
+    ctx.beginPath();
+    ctx.arc( rulerStartOnCanvas.x, rulerStartOnCanvas.y, 8, 0, 6.28 );
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc( rulerEndOnCanvas.x, rulerEndOnCanvas.y, 8, 0, 6.28 );
+    ctx.fill();
+    ctx.stroke();
+}
+
+
 
 
 

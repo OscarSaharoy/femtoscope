@@ -167,12 +167,11 @@ const dyStat       = document.getElementById("dy-stat");
 const lengthStat   = document.getElementById("length-stat");
 const gradientStat = document.getElementById("gradient-stat");
 
+const rulerStats   = [startStat, endStat, dxStat, dyStat, lengthStat, gradientStat];
+
 function cancelRulerOnEsc(event) {
     
-    if( event.key != "Escape" ) return;
-        
-    rulerAdded = false;
-    endRuler();
+    if( event.key == "Escape" ) cancelRuler();
 }
 
 function addRuler() {
@@ -199,6 +198,10 @@ function addRuler() {
 
 function cancelRuler(event) {
 
+    // unset all the ruler stats
+    for(rulerStat of rulerStats) rulerStat.innerHTML = "-";
+
+    // unset the rulerAdded flag and call endRuler
     rulerAdded = false;
     endRuler();
 }
@@ -221,14 +224,13 @@ function endRuler() {
 
 function updateRulerStats() {
 
+    // this is true if rulerEnd is not set yet
     if( isNaN(rulerEnd.x) ) {
 
-        startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "v, " + rulerStart.y.toPrecision(3) + "v";
-        endStat.innerHTML      = "-";
-        dxStat.innerHTML       = "-";
-        dyStat.innerHTML       = "-";
-        lengthStat.innerHTML   = "-";
-        gradientStat.innerHTML = "-";
+        // only set the start position, all others are "-"
+        for(rulerStat of rulerStats) rulerStat.innerHTML = "-";
+
+        startStat.innerHTML = rulerStart.x.toPrecision(3)  + "v, " + rulerStart.y.toPrecision(3) + "v";
 
         return;
     }
@@ -250,19 +252,24 @@ function updateRulerStats() {
 
 function setFirstRulerPoint( event ) {
 
+    // cement the ruler start as the current mouse pos and link the ruler end to the mouse pos which changes
     rulerStart = vec2.clone( graphjs.mousePos );
     rulerEnd   = graphjs.mousePos;
 
+    // switch from this function on click to the setSecondRulerPoint function
     graphjs.canvas.removeEventListener( "click", setFirstRulerPoint  );
     graphjs.canvas.addEventListener(    "click", setSecondRulerPoint );
 }
 
 function setSecondRulerPoint( event ) {
 
+    // cement ruler end as the current mouse position
     rulerEnd = vec2.clone( graphjs.mousePos );
 
+    // remove the event listener for this function on clicking
     graphjs.canvas.removeEventListener( "click", setSecondRulerPoint );
 
+    // set the ruler added flag and call the endRuler function
     rulerAdded = true;
     endRuler();
 }
@@ -278,28 +285,34 @@ function drawRuler( graph ) {
 
     if(addingRuler) {
 
-        graph.ctx.strokeStyle = "#888888";
-        graph.ctx.lineWidth = 1;
-        graph.ctx.setLineDash([6, 6]);
+        // if we're currently adding a ruler, draw dotted horizontal and vertical lines
+        // at the mouse position to help alignment
+
+        ctx.strokeStyle = "#888888";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 6]);
 
         graph.drawVerticalLine(   graph.mousePosOnCanvas.x );
         graph.drawHorizontalLine( graph.mousePosOnCanvas.y );
 
+        // this is called every frame as the ruler points are being set
         updateRulerStats();
     }
 
-    graph.ctx.strokeStyle = "#54f330";
-    graph.ctx.lineWidth = 3;
-    graph.ctx.setLineDash([]);    
+    ctx.strokeStyle = "#54f330";
+    ctx.lineWidth = 3;
+    ctx.setLineDash([]);    
 
+    // draw the ruler line between the 2 points
     ctx.beginPath();
     ctx.moveTo( rulerStartOnCanvas.x, rulerStartOnCanvas.y );
     ctx.lineTo( rulerEndOnCanvas.x,   rulerEndOnCanvas.y   );
     ctx.stroke();
 
-    graph.ctx.lineWidth   = 5;
-    graph.ctx.fillStyle   = "white";
+    ctx.lineWidth   = 5;
+    ctx.fillStyle   = "white";
 
+    // draw 2 circles at each end of the ruler
     ctx.beginPath();
     ctx.arc( rulerStartOnCanvas.x, rulerStartOnCanvas.y, 8, 0, 6.28 );
     ctx.fill();

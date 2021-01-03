@@ -21,6 +21,7 @@
 
         <button id="no-serial-continue"> continue </button>
 
+        <script type="text/javascript" src="scripts/noserialwarning.js"> </script>
     </div>
 
     <canvas width=1 height=1 id="graphjs"> </canvas>
@@ -35,9 +36,11 @@
 
         <button id="fft"> show frequency spectrum 🎵 </button>
 
-        <div id="stats">
+        <button id="fit-data"> fit to data 📈 </button>
 
-        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> waveform stats </h2>
+        <div class="stats">
+
+        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> waveform info </h2>
 
             <div class="left">
                 <p> max </p>
@@ -57,11 +60,12 @@
                 <p id="frequency-stat"> - </p>
             </div>
         </div>
+
         <button id="add-ruler"> add a ruler 📏 </button>
 
-        <div id="stats">
+        <div class="stats">
 
-        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> ruler stats </h2>
+        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> ruler info </h2>
 
             <div class="left">
             	<p> start </p>
@@ -81,13 +85,38 @@
                 <p id="gradient-stat"> - </p>
             </div>
         </div>
+
+        <div id="settings">
+
+            <h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> sampling settings </h2>
+
+            <div class="left">
+                <p> sample count </p>
+                <p> voltage range </p>
+            </div>
+
+            <div class="right">
+                <input id="sample-count" style="grid-column-start: 1; grid-column-end: 4;" type="number" value="2048"> </input>
+                <input id="voltage-range-min" style="grid-column: 1; width: 6rem;" type="number" value="0"> </input>
+                <p style="grid-column: 2; padding: 0 0.5rem;"> - </p>
+                <input id="voltage-range-max" style="grid-column: 3; width: 6rem;" type="number" value="3.3"> </input>
+            </div>
+        </div>
     
     </div>
 
     <script type="text/javascript" src="../graph.js/vec2.js"> </script>
     <script type="text/javascript" src="../graph.js/graph.js"> </script>
     <script type="text/javascript" src="../minfft.js/minfft.js"> </script>
-    <script src="femtoscope.js"> </script>
+
+    <script type="text/javascript" src="scripts/samplingsettings.js"> </script>
+    <script type="text/javascript" src="scripts/serialconnection.js"> </script>
+    <script type="text/javascript" src="scripts/femtoscope.js"> </script>
+    <script type="text/javascript" src="scripts/ruler.js"> </script>
+    <script type="text/javascript" src="scripts/divider.js"> </script>
+    <script type="text/javascript" src="scripts/fitgraphdata.js"> </script>
+    <script type="text/javascript" src="scripts/fftbutton.js"> </script>
+    <script type="text/javascript" src="scripts/updatestats.js"> </script>
 </body>
 
 </html>

@@ -18,11 +18,15 @@ graphjs.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
 // number of points collected since last update
 var pointsCollected = 0;
 
+var sampleTime = 0;
+
 const trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
 
 async function collectData(reader) {
 
     // listen to data coming from the serial device
+
+    var time = performance.now();
 
     while (true) {
 
@@ -36,6 +40,13 @@ async function collectData(reader) {
 
             break;
         }
+
+        // calculate and set sample rate
+        const timeNow = performance.now();
+        var dt = (performance.now() - time) / 1000;
+        sampleTime = dt / value.length * 0.05 + sampleTime * 0.95;
+
+        time = timeNow;
 
         // make a new array of floats from the collects UInt8Array
         var newPoints = Array.from(value).map( x => x / 256.0 * (voltageMax - voltageMin) + voltageMin );
@@ -77,10 +88,16 @@ function processData() {
 
 function updateGraphPoints() {
 
-    // decide whether to use the ffted points or normal ones
-    const pointsToUse = showfft ? pointsfft : points;
+    if(showfft) {
+        
+        // plot the frequencies on the graph
+        var n = 0;
+        graphjs.points = pointsfft.map( x => new vec2(n++/(sampleTime*sampleCount), x) );   
+    }
+    else {
 
-    // plot the points on the graph
-    var n = 0;
-    graphjs.points = pointsToUse.map( x => new vec2(n++, x) );
+        // plot the points on the graph
+        var n = 0;
+        graphjs.points = points.map( x => new vec2(n+=sampleTime, x) );        
+    }
 }

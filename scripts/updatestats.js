@@ -23,7 +23,7 @@ function updateStats() {
     const p2pValue   = maxValue - minValue;
     const rmsValue   = getRMS( points );
     const dcAvgValue = getDCAverage( points );
-    const freqValue  = indexOfMaxFreq( pointsfft );
+    const freqValue  = indexOfMaxFreq( pointsfft )/(sampleTime*sampleCount);
 
     // add the values into the html
     maxStat.innerHTML        = maxValue.toPrecision(3)   + "v";

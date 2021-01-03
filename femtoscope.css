@@ -48,6 +48,7 @@ body {
     grid-column: 3;
     padding: 1rem;
     padding-right: 2rem;
+    overflow: auto;
 }
 
 h1 {

@@ -26,12 +26,14 @@ async function collectData(reader) {
 
     // listen to data coming from the serial device
 
-    var time = performance.now();
+    var startTime = performance.now();
 
     while (true) {
 
+        // wait for serial API to give us the data
         const { value, done } = await serialReader.read();
 
+        // close the serial port
         if (done) {
 
             // allow the serial port to be closed
@@ -40,13 +42,6 @@ async function collectData(reader) {
 
             break;
         }
-
-        // calculate and set sample rate
-        const timeNow = performance.now();
-        var dt = (performance.now() - time) / 1000;
-        sampleTime = dt / value.length * 0.05 + sampleTime * 0.95;
-
-        time = timeNow;
 
         // make a new array of floats from the collects UInt8Array
         var newPoints = Array.from(value).map( x => x / 256.0 * (voltageMax - voltageMin) + voltageMin );
@@ -62,6 +57,12 @@ async function collectData(reader) {
 
         // processData when we've collected enougth points
         if(pointsCollected >= sampleCount) {
+
+            // calculate and set sample rate
+            const nowTime = performance.now();
+            var timeTaken = (nowTime - startTime) / 1000;
+            sampleTime    = timeTaken / pointsCollected;
+            startTime     = nowTime;
 
             pointsCollected = 0;
             processData();

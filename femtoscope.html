@@ -28,7 +28,7 @@
 
     <div id="divider"> </div>
 
-    <div id="control-panel">
+    <div id="control-panel" tabindex="-1">
         
         <h1 style="margin-bottom: 1rem;"> femto<strong>scope</strong> </h1>
 
@@ -38,27 +38,41 @@
 
         <button id="fit-data"> fit to data 📈 </button>
 
+        <!-- <div id="triggering-holder">
+	        
+	    </div> -->
+
+	    
+	    <select id="triggering">
+        	<option value="none"> none </option>
+        	<option value="single"> single </option>
+        	<option value="repeat"> repeat </option>
+        </select>
+
+        <p id="triggering-text"> triggering 🔫 </p>
+        
         <div class="stats">
 
-        	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> waveform info </h2>
+        	<h2 class="header"> waveform info </h2>
 
-            <div class="left">
-                <p> max </p>
-                <p> min </p>
-                <p> peak to peak </p>
-                <p> rms </p>
-                <p> dc average </p>
-                <p> frequency</p>
-            </div>
+            <p class="left"> max </p>
+            <p class="right" id="max-stat"> - </p>
 
-            <div class="right">
-                <p id="max-stat"> - </p>
-                <p id="min-stat"> - </p>
-                <p id="peak-to-peak-stat"> - </p>
-                <p id="rms-stat"> - </p>
-                <p id="dc-average-stat"> - </p>
-                <p id="frequency-stat"> - </p>
-            </div>
+            <p class="left"> min </p>
+	        <p class="right" id="min-stat"> - </p>
+            
+            <p class="left"> peak to peak </p>
+            <p class="right" id="peak-to-peak-stat"> - </p>
+            
+            <p class="left"> rms </p>
+            <p class="right" id="rms-stat"> - </p>
+            
+            <p class="left"> dc average </p>
+            <p class="right" id="dc-average-stat"> - </p>
+            
+            <p class="left"> frequency</p>
+            <p class="right" id="frequency-stat"> - </p>
+
         </div>
 
         <button id="add-ruler"> add a ruler 📏 </button>
@@ -67,42 +81,40 @@
 
         	<h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> ruler info </h2>
 
-            <div class="left">
-            	<p> start </p>
-            	<p> end </p>
-                <p> dx </p>
-                <p> dy </p>
-                <p> length </p>
-                <p> gradient </p>
-            </div>
+        	<p class="left"> start </p>
+        	<p class="right" id="start-stat"> - </p>
 
-            <div class="right">
-            	<p id="start-stat"> - </p>
-            	<p id="end-stat"> - </p>
-                <p id="dx-stat"> - </p>
-                <p id="dy-stat"> - </p>
-                <p id="length-stat"> - </p>
-                <p id="gradient-stat"> - </p>
-            </div>
+        	<p class="left"> end </p>
+        	<p class="right" id="end-stat"> - </p>
+
+            <p class="left"> dx </p>
+            <p class="right" id="dx-stat"> - </p>
+
+            <p class="left"> dy </p>
+            <p class="right" id="dy-stat"> - </p>
+
+            <p class="left"> length </p>
+            <p class="right" id="length-stat"> - </p>
+
+            <p class="left"> gradient </p>
+            <p class="right" id="gradient-stat"> - </p>
+
         </div>
 
         <div id="settings">
 
-            <h2 style="grid-column-start: 1; grid-column-end: 4; margin-bottom: 0.3rem;"> sampling settings </h2>
+            <h2 class="header"> sampling settings </h2>
 
-            <div class="left">
-                <p> sample count </p>
-                <p> voltage range </p>
-                <!-- <p> sample rate </p> -->
-            </div>
+            <p class="left"> sample count </p>
+            <input class="right" id="sample-count" style="grid-column-start: 2; grid-column-end: 5;" type="number" value="2048"> </input>
+            
+            <p class="left"> voltage range </p>	
+            <!-- <p> sample rate </p> -->
 
-            <div class="right">
-                <input id="sample-count" style="grid-column-start: 1; grid-column-end: 4;" type="number" value="2048"> </input>
-                <input id="voltage-range-min" style="grid-column: 1; width: 6rem;" type="number" value="0"> </input>
-                <p style="grid-column: 2; padding: 0 0.5rem;"> - </p>
-                <input id="voltage-range-max" style="grid-column: 3; width: 6rem;" type="number" value="3.3"> </input>
-                <!-- <p id="sample-rate" style="grid-column-start: 1; grid-column-end: 4;"> - </p> -->
-            </div>
+            <input id="voltage-range-min" style="grid-column: 2;" type="number" value="0"> </input>
+            <p style="grid-column: 3;"> - </p>
+            <input id="voltage-range-max" style="grid-column: 4;" type="number" value="3.3"> </input>
+            <!-- <p id="sample-rate" style="grid-column-start: 1; grid-column-end: 4;"> - </p> -->
         </div>
     
     </div>
@@ -112,6 +124,7 @@
     <script type="text/javascript" src="../minfft.js/minfft.js"> </script>
 
     <script type="text/javascript" src="scripts/samplingsettings.js"> </script>
+    <script type="text/javascript" src="scripts/triggering.js"> </script>
     <script type="text/javascript" src="scripts/serialconnection.js"> </script>
     <script type="text/javascript" src="scripts/femtoscope.js"> </script>
     <script type="text/javascript" src="scripts/ruler.js"> </script>

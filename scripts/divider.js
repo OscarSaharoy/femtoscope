@@ -15,7 +15,7 @@ function dividerMouseMove( event ) {
     if( !dividerClicked ) return;
 
     // change the body's column template - change amount of screen that is graph/UI
-    document.body.style.gridTemplateColumns = (event.clientX-10).toString() + "px 1rem auto";
+    document.body.style.gridTemplateColumns = (event.clientX-10).toString() + "px 1.5rem auto";
 
     graphjs.resize();
 }

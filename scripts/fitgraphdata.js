@@ -1,5 +1,6 @@
 // Oscar Saharoy 2021
 
+// the button that fits data to graph
 const fitDataButton = document.getElementById("fit-data");
 fitDataButton.onclick = fitToData;
 
@@ -13,12 +14,18 @@ function compareExtents( extents, p ) {
 }
 
 // apply compareExtents across arr to get the max and min values
-const getExtents = arr => arr.reduce( compareExtents, { top:   -Infinity, 
-                                                        right: -Infinity, 
-                                                        bottom: Infinity, 
-                                                        left:   Infinity } );
+const getExtents = arr => arr.reduce( compareExtents, { topRight:   vec2.minusInfinity, 
+                                                        bottomLeft: vec2.infinity } );
 
 function fitToData() {
+
+    const topRight   = vec2.minusInfinity;
+    const bottomLeft = vec2.infinity;
+
+    for(point of graphjs.points) {
+        topRight.setIfGreater(point);
+        bottomLeft.setIfLess(point);
+    }
 
     // get the extents of the graph data
     const extents    = getExtents( graphjs.points );

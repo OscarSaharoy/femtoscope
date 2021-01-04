@@ -12,7 +12,7 @@ function togglefft( event ) {
     // set the fft button to show the correct value
     fftButton.innerHTML = showfft ? "show waveform 🌊" : "show frequency spectrum 🎵";
 
-    // update the graph display
+    // update the graph display and remove the ruler
     updateGraphPoints();
     fitToData();
     cancelRuler();

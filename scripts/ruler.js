@@ -49,8 +49,8 @@ function addRuler() {
     // prevent graph panning
     graphjs.preventPanning = true;
 
-    // set the graphjs user function to the drawRuler function
-    graphjs.userFunction = drawRuler;
+    // add the drawruler function in to be called each frame
+    graphjs.userDrawFunctions.push( drawRuler );
 
     addingRuler = true;
 }

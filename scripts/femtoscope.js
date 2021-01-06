@@ -4,6 +4,9 @@
 // get the graph
 const graphjs = new Graph("graphjs");
 
+var drawingFunctions = [];
+graphjs.userFunction = () => drawingFunctions.forEach( f => f() );
+
 
 // variable that decides if we show the fft or normal waveform
 var showfft = false;

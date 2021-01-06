@@ -15,17 +15,15 @@ var pointsfft = [];
 // code for custom right click
 graphjs.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
 
-// number of points collected since last update
-var pointsCollected = 0;
+var sampleTime = null;
 
-var sampleTime = 0;
-
-const trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
 
 async function collectData(reader) {
 
     // listen to data coming from the serial device
 
+    // number of points collected since last update
+    var pointsCollected = 0;
     var startTime = performance.now();
 
     while (true) {
@@ -62,16 +60,18 @@ async function collectData(reader) {
             const nowTime = performance.now();
             var timeTaken = (nowTime - startTime) / 1000;
             sampleTime    = timeTaken / pointsCollected;
-            startTime     = nowTime;
 
             pointsCollected = 0;
             processData();
+
+            startTime = performance.now();
         }
     }
 }
 
 // the windowing function that femtoscope uses (hamming)
 const windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
+const trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
 
 function processData() {
 
@@ -97,8 +97,22 @@ function updateGraphPoints() {
     }
     else {
 
+        var o;
+
+        for(var i=0; i<points.length; ++i) {
+        
+            const value = points[i];
+            if( value > 0.7 && points[i-1] < 0.7) {
+
+                o = i;
+                break;
+                console.log(o);
+            }
+        }
+
+
         // plot the points on the graph
         var n = 0;
-        graphjs.points = points.map( x => new vec2(n+=sampleTime, x) );        
+        graphjs.points = points.slice(o).map( x => new vec2(n+=sampleTime, x) );        
     }
 }

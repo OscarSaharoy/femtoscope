@@ -34,8 +34,8 @@ async function connectToSerial( event ) {
         connectButton.onclick   = disconnectFromSerial;
     }
     catch {
+        
         // error occurs when user doesn't select a serial port
-
         console.log("failed to connect :(");
 
         // reset button and exit function
@@ -50,9 +50,12 @@ async function connectToSerial( event ) {
         await collectData(serialReader);
     }
     catch(err) {
-        console.log("data collection error!");
+
+        console.log("data collection error:");
         console.log(err);
+
         await disconnectFromSerial(event);
+
         connectButton.innerHTML = "lost connection 😞 click to reconnect"
         connectButton.onclick   = connectToSerial;
     }

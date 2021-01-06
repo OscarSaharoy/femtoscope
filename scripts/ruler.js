@@ -28,6 +28,8 @@ const gradientStat = document.getElementById("gradient-stat");
 
 const rulerStats   = [startStat, endStat, dxStat, dyStat, lengthStat, gradientStat];
 
+graphjs.canvas.addEventListener("contextmenu", cancelRuler);
+
 function cancelRulerOnEsc(event) {
     
     if( event.key == "Escape" ) cancelRuler();

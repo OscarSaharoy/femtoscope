@@ -11,7 +11,7 @@ const frequencyStat  = document.getElementById("frequency-stat");
 const waveformStats  = [maxStat, minStat, peakToPeakStat, rmsStat, dcAverageStat, frequencyStat];
 
 // some helper functions that find some of the stats
-const indexOfMaxFreq = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 4) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
+const indexOfMaxFreq = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 1) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
 const getRMS         = arr => ( arr.reduce( (Sx2, x)     => Sx2 + x*x, 0 ) / arr.length ) ** 0.5
 const getDCAverage   = arr =>   arr.reduce( (Sx, x)      => Sx + x,    0 ) / arr.length
 

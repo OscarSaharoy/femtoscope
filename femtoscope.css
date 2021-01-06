@@ -109,6 +109,7 @@ button:active {
     font-size: 0.9rem;
     text-align-last: right;
     border: 1px solid black;
+    user-select: none;
 }
 
 #triggering:focus {
@@ -126,6 +127,7 @@ button:active {
     margin-top: -2.8rem;
     margin-bottom: 2.5rem;
     pointer-events: none;
+    user-select: none;
 }
 
 .stats {
@@ -171,13 +173,14 @@ button:active {
     font-size: 0.9rem;
     display: block;
     padding: 0.5rem;
-    padding-right: 0;
+    padding-right: 1px;
     min-width: 1rem;
 }
 
 #settings input:hover {
     border: 2px solid black;
     padding: calc(0.5rem - 1px);
+    padding-right: 0;
 }
 
 #settings input:focus {

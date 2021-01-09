@@ -27,7 +27,7 @@ function drawTriggerPoint( graph ) {
 
 	ctx.strokeStyle = "#FFAB21";
 	ctx.fillStyle   = "white";
-	ctx.lineWidth   = 6;
+	ctx.lineWidth   = 4.5;
 	ctx.beginPath();
 
 	// draw a diamond at triggerPosOnCanvas

@@ -57,7 +57,7 @@ async function collectData(reader) {
         pointsCollected += newPoints.length;
 
         // processData when we've collected enougth points
-        if(pointsCollected >= sampleCount || true) {
+        if(pointsCollected >= sampleCount) {
 
             // calculate and set sample rate
             const nowTime = performance.now();
@@ -102,7 +102,7 @@ function updateGraphPoints() {
 
         var o;
 
-        for(var i=0; i<points.length && false; ++i) {
+        for(var i=0; i<points.length; ++i) {
         
             const value = points[i];
             if( value > 0.7 && points[i-1] < 0.7) {
@@ -116,6 +116,6 @@ function updateGraphPoints() {
 
         // plot the points on the graph
         var n = 0;
-        graphjs.points = points.map( x => new vec2(n+=1, x) );        
+        graphjs.points = points.map( x => new vec2(n+=sampleTime, x) );        
     }
 }

@@ -1,21 +1,32 @@
 // Oscar Saharoy 2021
 
-// the divider between the graph and UI
-const divider = document.getElementById("divider");
-var dividerClicked = false;
+class DividerManager {
 
-// event listeners to enable dragging of the divider
-divider.addEventListener(  "mousedown",  e => { dividerClicked = true;  } );
-document.addEventListener( "mouseup",    e => { dividerClicked = false; } );
-document.addEventListener( "mouseleave", e => { dividerClicked = false; } );
-document.addEventListener( "mousemove", dividerMouseMove );
+	constructor( dividerId, graph ) {
 
-function dividerMouseMove( event ) {
+		// the divider between the graph and UI
+		this.divider = document.getElementById( dividerId );
+		this.dividerClicked = false;
 
-    if( !dividerClicked ) return;
+		// reference to th graph
+		this.graph = graphjs;
 
-    // change the body's column template - change amount of screen that is graph/UI
-    document.body.style.gridTemplateColumns = (event.clientX-10).toString() + "px 1.5rem auto";
+		// event listeners to enable dragging of the divider
+		divider.addEventListener(  "mousedown",  e => { this.dividerClicked = true;  } );
+		document.addEventListener( "mouseup",    e => { this.dividerClicked = false; } );
+		document.addEventListener( "mouseleave", e => { this.dividerClicked = false; } );
+		document.addEventListener( "mousemove",  e =>   this.dividerMouseMove(e)       );
+	}
 
-    graphjs.resize();
+	dividerMouseMove( e ) {
+
+	    if( !this.dividerClicked ) return;
+
+	    // change the body's column template - change amount of screen that is graph/UI
+	    document.body.style.gridTemplateColumns = ( e.clientX-10 ).toString() + "px 1.5rem auto";
+
+	    this.graph.resize();
+	}
 }
+
+const dividerManager = new DividerManager( "divider", graphjs );

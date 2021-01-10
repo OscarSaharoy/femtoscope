@@ -119,3 +119,28 @@ function updateGraphPoints() {
         graphjs.points = points.map( x => new vec2(n+=sampleTime, x) );        
     }
 }
+
+// set the cursor to what we want when the mouse is moved
+graphjs.canvas.addEventListener( "mousemove", setCursor );
+
+function setCursor() {
+
+    if( graphjs.mouseClicked ) return;
+
+    // prevent panning the graph if needed and set the cursor
+    graphjs.preventPanning      = nearRuler || nearTrigger;     
+    graphjs.canvas.style.cursor = nearRuler || nearTrigger ? "move" : "auto";
+}
+
+function drawCrosshairAtCursor( ctx ) {
+
+    // draw a pair of dotted lines across the canvas centered on the mouse
+    ctx.strokeStyle = "#888888";
+    ctx.lineWidth = 1;
+    ctx.setLineDash([6, 6]);
+
+    graphjs.drawVerticalLine(   graphjs.mousePosOnCanvas.x );
+    graphjs.drawHorizontalLine( graphjs.mousePosOnCanvas.y );
+
+    ctx.setLineDash([]);
+}

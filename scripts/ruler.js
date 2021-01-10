@@ -13,7 +13,7 @@ var addingRuler = false;
 var rulerAdded  = false;
 
 // flags to tell if the mouse is near the ruler
-var nearRuler  = false;
+var nearRuler      = false;
 var nearRulerStart = false;
 var nearRulerEnd   = false;
 var draggingRuler  = false;
@@ -103,11 +103,10 @@ graphjs.canvas.addEventListener( "mousemove", rulerMouseMove );
 
 function rulerMouseMove(event) {
 
-
     // flag to tell the drawing routine if we need to draw the dotted crosshair
     draggingRulerEnd = graphjs.mouseClicked && ( nearRulerStart || nearRulerEnd );
 
-    // if clicked, moving mouse and near the ruler the must be dragging the ruler
+    // if clicked, moving mouse and near the ruler then we must be dragging the ruler
     if( graphjs.mouseClicked && nearRuler ) dragRuler(event);
 
     // only update cursor and closeness flags if mouse is not clicked
@@ -115,10 +114,6 @@ function rulerMouseMove(event) {
 
         // sets the nearRulerStart, nearRulerEnd, and nearRuler flags
         checkIfNearRuler();
-
-        // set the cursor and prevent panning the graph if needed
-        graphjs.preventPanning      = nearRuler;
-        graphjs.canvas.style.cursor = nearRuler ? "move" : "auto";
     }
 }
 
@@ -207,13 +202,7 @@ function drawRuler( graph ) {
 
         // if we're currently adding a ruler, draw dotted horizontal and vertical lines
         // at the mouse position to help alignment
-
-        ctx.strokeStyle = "#888888";
-        ctx.lineWidth = 1;
-        ctx.setLineDash([6, 6]);
-
-        graph.drawVerticalLine(   graph.mousePosOnCanvas.x );
-        graph.drawHorizontalLine( graph.mousePosOnCanvas.y );
+        drawCrosshairAtCursor( ctx );
 
         // this is called every frame as the ruler points are being set
         updateRulerStats();

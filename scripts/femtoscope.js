@@ -116,7 +116,7 @@ function updateGraphPoints() {
             return;
         }
 
-        var triggerPoints        = xyPoints.filter( (p,i) => Math.abs(p.y - triggerPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
+        var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggerPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
 
         if( !triggerPoints.length ) {
 
@@ -141,8 +141,8 @@ function setCursor() {
     if( graphjs.mouseClicked ) return;
 
     // prevent panning the graph if needed and set the cursor
-    graphjs.preventPanning      = nearRuler || triggering.nearDiamond;     
-    graphjs.canvas.style.cursor = nearRuler || triggering.nearDiamond ? "move" : "auto";
+    graphjs.preventPanning      = ruler.nearRuler || triggering.nearDiamond;     
+    graphjs.canvas.style.cursor = ruler.nearRuler || triggering.nearDiamond ? "move" : "auto";
 }
 
 function drawCrosshairAtCursor( ctx ) {

@@ -14,7 +14,7 @@ class Triggering {
 		this.select.onchange = () => this.setTriggering();
 
 		this.mode        = TriggerModes.NONE;
-		this.diamondPos  = vec2.zero();
+		this.diamondPos  = vec2.zero;
 		this.showDiamond = false;
 		this.nearDiamond = false;
 		this.dragging    = false;

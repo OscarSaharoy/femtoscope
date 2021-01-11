@@ -9,141 +9,160 @@ class Ruler {
         
         // button that adds a ruler to the graph
         this.button = document.getElementById("add-ruler");
-        this.button.onclick = () => this.addRuler();
+        this.button.onclick = () => this.create();
 
         // 2 vec2s that hold the start and end of the ruler
-        this.startPos = new vec2(0, 0);
-        this.endPos   = new vec2(0, 0);
+        this.startPos    = vec2.zero;
+        this.endPos      = vec2.zero;
 
-        // true while the ruler is being added
-        this.adding = false;
-        this.added  = false;
+        // ruler state flags
+        this.creating    = false;
+        this.created     = false;
+        this.dragging    = false;
+        this.draggingEnd = false;
 
         // flags to tell if the mouse is near the ruler
-        this.nearRuler = false;
-        this.nearStart = false;
-        this.nearEnd   = false;
-        this.dragging  = false;
+        this.nearRuler   = false;
+        this.nearStart   = false;
+        this.nearEnd     = false;
+
+        // function which lets us remove the ruler when esc is pressed
+        this.cancelOnEsc = event => { if( event.key == "Escape" && this.creating ) this.remove() };
+        window.addEventListener( "keydown", e => this.cancelOnEsc(e) );
+
+        // add the draw function in to be called each frame
+        this.graph.userDrawFunctions.push( graph => this.draw(graph) );
+        
+        // setup event listeners
+        this.graph.canvas.addEventListener( "click",     e => this.onClick(e)     );
+        this.graph.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
 
         // html elements that have the numeric values for the ruler stats
-        const startStat    = document.getElementById("start-stat");
-        const endStat      = document.getElementById("end-stat");
-        const dxStat       = document.getElementById("dx-stat");
-        const dyStat       = document.getElementById("dy-stat");
-        const lengthStat   = document.getElementById("length-stat");
-        const gradientStat = document.getElementById("gradient-stat");
+        // const startStat    = document.getElementById("start-stat");
+        // const endStat      = document.getElementById("end-stat");
+        // const dxStat       = document.getElementById("dx-stat");
+        // const dyStat       = document.getElementById("dy-stat");
+        // const lengthStat   = document.getElementById("length-stat");
+        // const gradientStat = document.getElementById("gradient-stat");
 
-        const statIds = 
-        const rulerStats   = [startStat, endStat, dxStat, dyStat, lengthStat, gradientStat];
-
-        this.graph.canvas.addEventListener("contextmenu", cancelRuler);
+        // const rulerStats   = [startStat, endStat, dxStat, dyStat, lengthStat, gradientStat];
     }
 
-    cancelRulerOnEsc(event) {
-        
-        if( event.key == "Escape" ) cancelRuler();
-    }
-
-    addRuler() {
+    create() {
 
         // toggle the add ruler button to cancel adding the ruler
-        addRulerButton.innerHTML = "adding a ruler 🤔";
-        addRulerButton.onclick   = cancelRuler;
-
-        // event listener to call endRuler on pressing esc
-        window.addEventListener( "keydown", cancelRulerOnEsc );
-
-        rulerStart = this.graph.mousePos;
-        rulerEnd   = vec2.notANumber();
-        this.graph.canvas.addEventListener( "click", setFirstRulerPoint );
+        this.button.innerHTML = "adding ruler 🤔";
+        this.button.onclick   = () => this.remove();
 
         // prevent graph panning
         this.graph.preventPanning = true;
+        this.creating = true;
 
-        // add the drawruler function in to be called each frame
-        this.graph.userDrawFunctions.push( drawRuler );
-
-        addingRuler = true;
+        // setup the ruler start to follow the mouse position
+        this.startPos = this.graph.mousePos;
+        this.endPos   = vec2.notANumber;
     }
 
-    cancelRuler(event) {
+    onClick(event) {
+
+        // this function only works while the ruler is being created
+        if( !this.creating ) return;
+
+        // true if we are currently placing the first point
+        if( vec2.isNaN( this.endPos ) ) {
+
+            // set the start position and set the end to follow the mouse
+            this.startPos = vec2.clone( this.graph.mousePos );
+            this.endPos   = this.graph.mousePos;
+        }
+
+        // else we are placing the end of the ruler
+        else {
+
+            // set the end position
+            this.endPos = vec2.clone( this.graph.mousePos );
+
+            // set the created flag and call finishCreating
+            this.created = true;
+            this.finishCreating();
+        }
+    }
+
+    remove() {
 
         // unset all the ruler stats
-        for(rulerStat of rulerStats) rulerStat.innerHTML = "-";
+        //rulerStats.forEach( stat => stat.innerHTML = "-" );
 
-        // unset the rulerAdded flag and call endRuler
-        rulerAdded = false;
-        endRuler();
+        // unset the created flag and call finishCreating
+        this.created = false;
+        this.finishCreating();
+
+        // we are definately not close to the ruler
+        this.nearRuler = this.nearStart = this.nearEnd = false;
     }
 
-    endRuler() {
+    finishCreating() {
 
         // reset the add ruler button to normal so it adds a ruler
-        addRulerButton.innerHTML = "add a ruler 📏";
-        addRulerButton.onclick   = addRuler;
+        this.button.innerHTML  = "add ruler 📏";
+        this.button.onclick    = () => this.create();
 
-        // remove the event listener that calls this function on pressing esc
-        window.removeEventListener( "keydown", cancelRulerOnEsc );
-        this.graph.canvas.removeEventListener( "click", setFirstRulerPoint  );
-        this.graph.canvas.removeEventListener( "click", setSecondRulerPoint );
-
-        // re enable graph panning and set addingRuler flag
+        // re enable graph panning and set creating flag
         this.graph.preventPanning = false;
-        addingRuler = false;
+        this.creating             = false;
     }
 
     dragRuler(event) {
 
-        if( nearRulerStart )
-            rulerStart.setv( this.graph.mousePos );
+        if( this.nearStart )
+            this.startPos.setv( this.graph.mousePos );
 
-        else if( nearRulerEnd )
-            rulerEnd.setv( this.graph.mousePos );
+        else if( this.nearEnd )
+            this.endPos.setv( this.graph.mousePos );
 
         else {
-            rulerStart.incBy( this.graph.mouseMove );
-            rulerEnd.incBy(   this.graph.mouseMove );
-
-            updateRulerStats();
+            this.startPos.incBy( this.graph.mouseMove );
+            this.endPos.incBy(   this.graph.mouseMove );
         }
+        
+        // updateRulerStats();
     }
 
-    this.graph.canvas.addEventListener( "mousemove", rulerMouseMove );
+    onMousemove(event) {
 
-    rulerMouseMove(event) {
+        // nothing to do if the ruler hasn't been created
+        if( !this.created ) return;
 
         // flag to tell the drawing routine if we need to draw the dotted crosshair
-        draggingRulerEnd = this.graph.mouseClicked && ( nearRulerStart || nearRulerEnd );
+        this.draggingEnd = this.graph.mouseClicked && ( this.nearStart || this.nearEnd );
 
         // if clicked, moving mouse and near the ruler then we must be dragging the ruler
-        if( this.graph.mouseClicked && nearRuler ) dragRuler(event);
+        if( this.graph.mouseClicked && this.nearRuler ) this.dragRuler(event);
 
         // only update cursor and closeness flags if mouse is not clicked
-        if( !this.graph.mouseClicked ) {
-
-            // sets the nearRulerStart, nearRulerEnd, and nearRuler flags
-            checkIfNearRuler();
-        }
+        if( !this.graph.mouseClicked ) this.checkIfNearRuler();
     }
 
     checkIfNearRuler() {
 
-        const rulerStartOnCanvas = this.graph.graphToCanvas( rulerStart );
-        const rulerEndOnCanvas   = this.graph.graphToCanvas( rulerEnd   );
+        const rulerStartOnCanvas = this.graph.graphToCanvas( this.startPos );
+        const rulerEndOnCanvas   = this.graph.graphToCanvas( this.endPos   );
+        const startToEndOnCanvas = vec2.sub(rulerEndOnCanvas, rulerStartOnCanvas);
 
         // check if mouse is near to either ruler end
-        nearRulerStart = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerStartOnCanvas ) < 120;
-        nearRulerEnd   = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerEndOnCanvas   ) < 120;
+        this.nearStart = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerStartOnCanvas ) < 120;
+        this.nearEnd   = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerEndOnCanvas   ) < 120;
 
         // fraction of the distance along the line that is closest to the mouse
-        var lambda = vec2.dot( vec2.sub(this.graph.mousePosOnCanvas, rulerStartOnCanvas), vec2.sub(rulerEndOnCanvas, rulerStartOnCanvas) ) 
-                   / vec2.dot( vec2.sub(rulerEndOnCanvas,         rulerStartOnCanvas), vec2.sub(rulerEndOnCanvas, rulerStartOnCanvas) );
+        var lambda = vec2.dot( vec2.sub(this.graph.mousePosOnCanvas, rulerStartOnCanvas), startToEndOnCanvas ) 
+                   / vec2.dot( startToEndOnCanvas, startToEndOnCanvas );
 
         // limit the fraction along the line between 0 and 1
         lambda = lambda < 0 ? 0 : lambda > 1 ? 1 : lambda;
 
+        // caclculate distance to closest point
         const closestPointOnRuler = vec2.lerp( rulerStartOnCanvas, rulerEndOnCanvas, lambda );
-        nearRuler = vec2.sqrDist( this.graph.mousePosOnCanvas, closestPointOnRuler ) < 120;
+        this.nearRuler = vec2.sqrDist( this.graph.mousePosOnCanvas, closestPointOnRuler ) < 120;
     }
 
     updateRulerStats() {
@@ -160,62 +179,32 @@ class Ruler {
         }
 
         // get all the stats from the ruler endpoints
-        const dxValue       = rulerEnd.x - rulerStart.x;
-        const dyValue       = rulerEnd.y - rulerStart.y;
-        const lengthValue   = ( dxValue**2 + dyValue**2 ) ** 0.5;
-        const gradientValue = dyValue / dxValue;
+        // const dxValue       = rulerEnd.x - rulerStart.x;
+        // const dyValue       = rulerEnd.y - rulerStart.y;
+        // const lengthValue   = ( dxValue**2 + dyValue**2 ) ** 0.5;
+        // const gradientValue = dyValue / dxValue;
 
         // add the values into the html
-        startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "s, " + rulerStart.y.toPrecision(3) + "v";
-        endStat.innerHTML      = rulerEnd.x.toPrecision(3)    + "s, " + rulerEnd.y.toPrecision(3)   + "v";
-        dxStat.innerHTML       = dxValue.toPrecision(3)       + "s";
-        dyStat.innerHTML       = dyValue.toPrecision(3)       + "v";
-        lengthStat.innerHTML   = lengthValue.toPrecision(3);
-        gradientStat.innerHTML = gradientValue.toPrecision(3) + "v/s";
+        // startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "s, " + rulerStart.y.toPrecision(3) + "v";
+        // endStat.innerHTML      = rulerEnd.x.toPrecision(3)    + "s, " + rulerEnd.y.toPrecision(3)   + "v";
+        // dxStat.innerHTML       = dxValue.toPrecision(3)       + "s";
+        // dyStat.innerHTML       = dyValue.toPrecision(3)       + "v";
+        // lengthStat.innerHTML   = lengthValue.toPrecision(3);
+        // gradientStat.innerHTML = gradientValue.toPrecision(3) + "v/s";
     }
 
-    setFirstRulerPoint( event ) {
-
-        // cement the ruler start as the current mouse pos and link the ruler end to the mouse pos which changes
-        rulerStart = vec2.clone( this.graph.mousePos );
-        rulerEnd   = this.graph.mousePos;
-
-        // switch from this function on click to the setSecondRulerPoint function
-        this.graph.canvas.removeEventListener( "click", setFirstRulerPoint  );
-        this.graph.canvas.addEventListener(    "click", setSecondRulerPoint );
-    }
-
-    setSecondRulerPoint( event ) {
-
-        // cement ruler end as the current mouse position
-        rulerEnd = vec2.clone( this.graph.mousePos );
-
-        // remove the event listener for this function on clicking
-        this.graph.canvas.removeEventListener( "click", setSecondRulerPoint );
-
-        // set the ruler added flag and call the endRuler function
-        rulerAdded = true;
-        endRuler();
-    }
-
-    drawRuler( graph ) {
+    draw( graph ) {
 
         // only draw something if the ruler is being added or is added
-        if( !addingRuler && !rulerAdded ) return;
+        if( !this.creating && !this.created ) return;
 
         const ctx = graph.ctx;
-        const rulerStartOnCanvas = this.graph.graphToCanvas( rulerStart );
-        const rulerEndOnCanvas   = this.graph.graphToCanvas( rulerEnd   );
+        const rulerStartOnCanvas = graph.graphToCanvas( this.startPos );
+        const rulerEndOnCanvas   = graph.graphToCanvas( this.endPos   );
 
-        if(addingRuler || draggingRulerEnd) {
-
-            // if we're currently adding a ruler, draw dotted horizontal and vertical lines
-            // at the mouse position to help alignment
-            drawCrosshairAtCursor( ctx );
-
-            // this is called every frame as the ruler points are being set
-            updateRulerStats();
-        }
+        // if we're currently moving an endpoint, draw dotted horizontal and vertical lines
+        // at the mouse position to help alignment
+        if( this.creating || this.draggingEnd ) drawCrosshairAtCursor( ctx );
 
         ctx.setLineDash([]); 
         ctx.strokeStyle = "#54f3f4";

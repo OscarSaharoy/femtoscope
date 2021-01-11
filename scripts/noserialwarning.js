@@ -1,17 +1,33 @@
 // Oscar Saharoy 2021
 
-// big div that holds the warning message when Serial API is not enabled
-const noSerialWarning = document.getElementById("no-serial");
+class NoSerialWarning {
 
-// button that hides that div
-const noSerialButton  = document.getElementById("no-serial-continue");
-noSerialButton.onclick = e => { noSerialWarning.style.display = "none" }
+    constructor() {
 
-// check if serial API exists
-if( "serial" in navigator ) {
+        // big div that holds the warning message when Serial API is not enabled
+        this.warningDiv = document.getElementById("no-serial");
 
-    // hide the message that is show when serial API is diabled
-    noSerialWarning.style.display = "none";
+        // button that hides that div
+        this.continueButton = document.getElementById("no-serial-continue");
+        this.continueButton.onclick = e => this.hide();
 
-    console.log("serial api enabled :)");
+        this.checkSerialAPI();
+    }
+
+    checkSerialAPI() {
+
+        // check the serial API exists
+        if( !("serial" in navigator) ) return;
+
+        // hide the warning if it does
+        this.hide();
+        console.log("serial api enabled :)");
+    }
+
+    hide() {
+
+        this.warningDiv.style.display = "none";
+    }
 }
+
+const noSerialWarning = new NoSerialWarning();

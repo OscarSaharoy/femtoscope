@@ -20,6 +20,7 @@ graphjs.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
 
 var sampleTime = null;
 
+var paused = false;
 
 async function collectData(reader) {
 
@@ -33,6 +34,8 @@ async function collectData(reader) {
 
         // wait for serial API to give us the data
         const { value, done } = await serialReader.read();
+
+        if( paused ) continue;
 
         // close the serial port
         if (done) {
@@ -62,10 +65,13 @@ async function collectData(reader) {
             // calculate and set sample rate
             const nowTime = performance.now();
             var timeTaken = (nowTime - startTime) / 1000;
-            sampleTime    = timeTaken / pointsCollected;
+            sampleTime    = timeTaken / pointsCollected * 0.05 + (sampleTime ?? timeTaken / pointsCollected) * 0.95;
 
             pointsCollected = 0;
             processData();
+
+            // pause if we're in triggering mode single
+            paused = triggeringMode == Triggering.SINGLE;
 
             startTime = performance.now();
         }
@@ -86,7 +92,7 @@ function processData() {
 
     pointsfft = fft( windowedPoints );
 
-    updateStats();
+    waveformStats.update();
     updateGraphPoints();
 }
 
@@ -100,23 +106,30 @@ function updateGraphPoints() {
     }
     else {
 
-        var o;
-
-        for(var i=0; i<points.length; ++i) {
-        
-            const value = points[i];
-            if( value > 0.7 && points[i-1] < 0.7) {
-
-                o = i;
-                break;
-                console.log(o);
-            }
-        }
-
-
         // plot the points on the graph
         var n = 0;
-        graphjs.points = points.map( x => new vec2(n+=sampleTime, x) );        
+        var xyPoints = points.map( x => new vec2(n+=sampleTime, x) );
+
+        if( triggeringMode == Triggering.NONE ) {
+
+            graphjs.points = xyPoints;
+            return;
+        }
+
+        var triggerPoints        = xyPoints.filter( (p,i) => Math.abs(p.y - triggerPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
+
+        if( !triggerPoints.length ) {
+
+            triggerColour = "#FF0000";
+            graphjs.points = xyPoints;
+            return;
+        }
+
+        triggerColour = "#FFAB21";
+        var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggerPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
+        var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggerPos.x - triggerCrossingPoint.x, 0) ) );
+
+        graphjs.points = shiftedPoints;
     }
 }
 
@@ -128,8 +141,8 @@ function setCursor() {
     if( graphjs.mouseClicked ) return;
 
     // prevent panning the graph if needed and set the cursor
-    graphjs.preventPanning      = nearRuler || nearTrigger;     
-    graphjs.canvas.style.cursor = nearRuler || nearTrigger ? "move" : "auto";
+    graphjs.preventPanning      = nearRuler || triggering.nearDiamond;     
+    graphjs.canvas.style.cursor = nearRuler || triggering.nearDiamond ? "move" : "auto";
 }
 
 function drawCrosshairAtCursor( ctx ) {

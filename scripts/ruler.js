@@ -37,15 +37,22 @@ class Ruler {
         this.graph.canvas.addEventListener( "click",     e => this.onClick(e)     );
         this.graph.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
 
-        // html elements that have the numeric values for the ruler stats
-        // const startStat    = document.getElementById("start-stat");
-        // const endStat      = document.getElementById("end-stat");
-        // const dxStat       = document.getElementById("dx-stat");
-        // const dyStat       = document.getElementById("dy-stat");
-        // const lengthStat   = document.getElementById("length-stat");
-        // const gradientStat = document.getElementById("gradient-stat");
+        // ruler stats are messy
+        this.stats = [
 
-        // const rulerStats   = [startStat, endStat, dxStat, dyStat, lengthStat, gradientStat];
+            new Stat("start-stat",    () => Stat.numberAndSuffix( this.startPos.x, "s") + ", " 
+                                          + Stat.numberAndSuffix( this.startPos.y, "v")                  ),
+
+            new Stat("end-stat",      () => Stat.numberAndSuffix( this.endPos.x,   "s") + ", " 
+                                          + Stat.numberAndSuffix( this.endPos.y,   "v")                  ),
+
+            new Stat("dx-stat",       () => Stat.numberAndSuffix( this.endPos.x - this.startPos.x, "s" ) ),
+            new Stat("dy-stat",       () => Stat.numberAndSuffix( this.endPos.y - this.startPos.y, "v" ) ),
+            new Stat("length-stat",   () => vec2.dist(this.startPos, this.endPos).toPrecision(3)         ),
+
+            new Stat("gradient-stat", () => Stat.numberAndSuffix( 
+                                            vec2.grad(vec2.sub(this.startPos, this.endPos)), "v/s" )     )
+        ];
     }
 
     create() {
@@ -90,12 +97,12 @@ class Ruler {
 
     remove() {
 
-        // unset all the ruler stats
-        //rulerStats.forEach( stat => stat.innerHTML = "-" );
-
         // unset the created flag and call finishCreating
         this.created = false;
         this.finishCreating();
+
+        // unset all the ruler stats
+        this.updateStats();
 
         // we are definately not close to the ruler
         this.nearRuler = this.nearStart = this.nearEnd = false;
@@ -124,13 +131,17 @@ class Ruler {
             this.startPos.incBy( this.graph.mouseMove );
             this.endPos.incBy(   this.graph.mouseMove );
         }
-        
-        // updateRulerStats();
+
+        // update the stats for the ruler
+        this.updateStats();
     }
 
     onMousemove(event) {
 
-        // nothing to do if the ruler hasn't been created
+        // if we're creating a ruler then update the stats
+        if( this.creating ) this.updateStats();
+
+        // nothing else to do if the ruler hasn't been created
         if( !this.created ) return;
 
         // flag to tell the drawing routine if we need to draw the dotted crosshair
@@ -165,32 +176,21 @@ class Ruler {
         this.nearRuler = vec2.sqrDist( this.graph.mousePosOnCanvas, closestPointOnRuler ) < 120;
     }
 
-    updateRulerStats() {
+    updateStats() {
 
-        // this is true if rulerEnd is not set yet
-        if( isNaN(rulerEnd.x) ) {
+        if( !this.created && !this.creating ) { 
 
-            // only set the start position, all others are "-"
-            for(rulerStat of rulerStats) rulerStat.innerHTML = "-";
-
-            startStat.innerHTML = rulerStart.x.toPrecision(3)  + "s, " + rulerStart.y.toPrecision(3) + "v";
-
-            return;
+            this.stats.forEach( stat => stat.clear() );
         }
+        else if( vec2.isNaN(this.endPos) ) {
 
-        // get all the stats from the ruler endpoints
-        // const dxValue       = rulerEnd.x - rulerStart.x;
-        // const dyValue       = rulerEnd.y - rulerStart.y;
-        // const lengthValue   = ( dxValue**2 + dyValue**2 ) ** 0.5;
-        // const gradientValue = dyValue / dxValue;
+            this.stats.forEach( stat => stat.clear() );
+            this.stats[0].update();
+        }
+        else {
 
-        // add the values into the html
-        // startStat.innerHTML    = rulerStart.x.toPrecision(3)  + "s, " + rulerStart.y.toPrecision(3) + "v";
-        // endStat.innerHTML      = rulerEnd.x.toPrecision(3)    + "s, " + rulerEnd.y.toPrecision(3)   + "v";
-        // dxStat.innerHTML       = dxValue.toPrecision(3)       + "s";
-        // dyStat.innerHTML       = dyValue.toPrecision(3)       + "v";
-        // lengthStat.innerHTML   = lengthValue.toPrecision(3);
-        // gradientStat.innerHTML = gradientValue.toPrecision(3) + "v/s";
+            this.stats.forEach( stat => stat.update() );
+        }
     }
 
     draw( graph ) {

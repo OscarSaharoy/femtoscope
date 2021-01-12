@@ -48,10 +48,10 @@ class Ruler {
 
             new Stat("dx-stat",       () => Stat.numberAndSuffix( this.endPos.x - this.startPos.x, "s" ) ),
             new Stat("dy-stat",       () => Stat.numberAndSuffix( this.endPos.y - this.startPos.y, "v" ) ),
-            new Stat("length-stat",   () => vec2.dist(this.startPos, this.endPos).toPrecision(3)         ),
+            new Stat("length-stat",   () => vec2.dist( this.startPos, this.endPos ).toPrecision(3)         ),
 
             new Stat("gradient-stat", () => Stat.numberAndSuffix( 
-                                            vec2.grad(vec2.sub(this.startPos, this.endPos)), "v/s" )     )
+                                            vec2.grad( vec2.sub(this.startPos, this.endPos) ), "v/s" )     )
         ];
     }
 
@@ -204,7 +204,7 @@ class Ruler {
 
         // if we're currently moving an endpoint, draw dotted horizontal and vertical lines
         // at the mouse position to help alignment
-        if( this.creating || this.draggingEnd ) drawCrosshairAtCursor( ctx );
+        if( this.creating || this.draggingEnd ) femtoscope.drawCrosshairAtCursor( ctx );
 
         ctx.setLineDash([]); 
         ctx.strokeStyle = "#54f3f4";

@@ -1,159 +1,163 @@
 // Oscar Saharoy 2021
 
 
-// get the graph
-const graphjs = new Graph("graphjs");
+class Femtoscope {
 
-var drawingFunctions = [];
-graphjs.userFunction = () => drawingFunctions.forEach( f => f() );
+    constructor() {
 
+        // get the graph
+        this.graph = graphjs;
 
-// variable that decides if we show the fft or normal waveform
-var showfft = false;
+        // variable that decides if we show the fft or normal waveform
+        this.showfft = false;
 
-// data points array and the frequency spectrum of it
-var points    = [];
-var pointsfft = [];
+        // data points array and the frequency spectrum of it
+        this.points    = [];
+        this.pointsfft = [];
 
-// code for custom right click
-graphjs.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
+        // code for custom right click
+        this.graph.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
 
-var sampleTime = null;
+        this.sampleTime = null;
+        this.paused = false;
 
-var paused = false;
+        // the windowing function that femtoscope uses (hamming)
+        this.windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
+        this.trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
 
-async function collectData(reader) {
+        // set the cursor to what we want when the mouse is moved
+        this.graph.canvas.addEventListener( "mousemove", e => this.setCursor(e) );
+    }
 
-    // listen to data coming from the serial device
+    async collectData(reader) {
 
-    // number of points collected since last update
-    var pointsCollected = 0;
-    var startTime = performance.now();
+        // listen to data coming from the serial device
 
-    while (true) {
+        // number of points collected since last update
+        var pointsCollected = 0;
+        var startTime = performance.now();
 
-        // wait for serial API to give us the data
-        const { value, done } = await serialReader.read();
+        while (true) {
 
-        if( paused ) continue;
+            // wait for serial API to give us the data
+            const { value, done } = await serialReader.read();
 
-        // close the serial port
-        if (done) {
+            if( this.paused ) continue;
 
-            // allow the serial port to be closed
-            serialReader.releaseLock();
-            console.log("serial port lost...");
+            // close the serial port
+            if (done) {
 
-            break;
-        }
+                // allow the serial port to be closed
+                serialReader.releaseLock();
+                console.log("serial port lost...");
 
-        // make a new array of floats from the collects UInt8Array
-        var newPoints = Array.from(value).map( x => x / 256.0 * (voltageMax - voltageMin) + voltageMin );
+                break;
+            }
+
+            // make a new array of floats from the collects UInt8Array
+            var newPoints = Array.from(value).map( x => x / 256.0 * (voltageMax - voltageMin) + voltageMin );
+            
+            // add the points onto the existing array
+            this.points = this.points.concat( newPoints );
+
+            // trim old points from start of array
+            if(this.points.length > sampleCount) this.points = this.points.splice( this.points.length - sampleCount );
         
-        // add the points onto the existing array
-        points = points.concat( newPoints );
+            // update the number of collected points
+            pointsCollected += newPoints.length;
 
-        // trim old points from start of array
-        if(points.length > sampleCount) points = points.splice( points.length - sampleCount );
-    
-        // update the number of collected points
-        pointsCollected += newPoints.length;
+            // processData when we've collected enougth points
+            if(pointsCollected >= sampleCount) {
 
-        // processData when we've collected enougth points
-        if(pointsCollected >= sampleCount) {
+                // calculate and set sample rate
+                const nowTime = performance.now();
+                var timeTaken = (nowTime - startTime) / 1000;
+                this.sampleTime = timeTaken / pointsCollected * 0.05 + (sampleTime ?? timeTaken / pointsCollected) * 0.95;
 
-            // calculate and set sample rate
-            const nowTime = performance.now();
-            var timeTaken = (nowTime - startTime) / 1000;
-            sampleTime    = timeTaken / pointsCollected * 0.05 + (sampleTime ?? timeTaken / pointsCollected) * 0.95;
+                pointsCollected = 0;
+                this.processData();
 
-            pointsCollected = 0;
-            processData();
+                // pause if we're in triggering mode single
+                this.paused = triggering.mode == TriggerModes.SINGLE;
 
-            // pause if we're in triggering mode single
-            paused = triggering.mode == TriggerModes.SINGLE;
-
-            startTime = performance.now();
+                startTime = performance.now();
+            }
         }
+    }
+
+    processData() {
+
+        console.log("processing data...");
+
+        // pass points through window function and then fft
+        const trimmedPoints  = trimToPowerOf2( this.points );
+        const windowedPoints = trimmedPoints.map( (x, i, arr) => x * this.windowFunction(i, arr.length) );
+
+        this.pointsfft = fft( windowedPoints );
+
+        //waveformStats.update();
+        this.updateGraphPoints();
+    }
+
+    updateGraphPoints() {
+
+        if(this.showfft) {
+            
+            // plot the frequencies on the graph
+            var n = 0;
+            this.graph.points = this.pointsfft.map( x => new vec2(n++/(sampleTime*sampleCount), x) );   
+        }
+        else {
+
+            // plot the points on the graph
+            var n = 0;
+            var xyPoints = this.points.map( x => new vec2(n+=sampleTime, x) );
+
+            if( triggering.mode == TriggerModes.NONE ) {
+
+                this.graph.points = xyPoints;
+                return;
+            }
+
+            var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggering.diamondPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
+
+            if( !triggerPoints.length ) {
+
+                triggering.diamondColour = "#FF0000";
+                this.graph.points = xyPoints;
+                return;
+            }
+
+            triggering.diamondColour = "#FFAB21";
+            var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
+            var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
+
+            this.graph.points = shiftedPoints;
+        }
+    }
+
+    setCursor() {
+
+        if( this.graph.mouseClicked ) return;
+
+        // prevent panning the graph if needed and set the cursor
+        this.graph.preventPanning      = ruler.nearRuler || triggering.nearDiamond;     
+        this.graph.canvas.style.cursor = ruler.nearRuler || triggering.nearDiamond ? "move" : "auto";
+    }
+
+    drawCrosshairAtCursor( ctx ) {
+
+        // draw a pair of dotted lines across the canvas centered on the mouse
+        ctx.strokeStyle = "#888888";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 6]);
+
+        this.graph.drawVerticalLine(   this.graph.mousePosOnCanvas.x );
+        this.graph.drawHorizontalLine( this.graph.mousePosOnCanvas.y );
+
+        ctx.setLineDash([]);
     }
 }
 
-// the windowing function that femtoscope uses (hamming)
-const windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
-const trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
-
-function processData() {
-
-    console.log("processing data...");
-
-    // pass points through window function and then fft
-    const trimmedPoints  = trimToPowerOf2( points );
-    const windowedPoints = trimmedPoints.map( (x, i, arr) => x * windowFunction(i, arr.length) );
-
-    pointsfft = fft( windowedPoints );
-
-    waveformStats.update();
-    updateGraphPoints();
-}
-
-function updateGraphPoints() {
-
-    if(showfft) {
-        
-        // plot the frequencies on the graph
-        var n = 0;
-        graphjs.points = pointsfft.map( x => new vec2(n++/(sampleTime*sampleCount), x) );   
-    }
-    else {
-
-        // plot the points on the graph
-        var n = 0;
-        var xyPoints = points.map( x => new vec2(n+=sampleTime, x) );
-
-        if( triggering.mode == TriggerModes.NONE ) {
-
-            graphjs.points = xyPoints;
-            return;
-        }
-
-        var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggering.diamondPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
-
-        if( !triggerPoints.length ) {
-
-            triggering.diamondColour = "#FF0000";
-            graphjs.points = xyPoints;
-            return;
-        }
-
-        triggering.diamondColour = "#FFAB21";
-        var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
-        var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
-
-        graphjs.points = shiftedPoints;
-    }
-}
-
-// set the cursor to what we want when the mouse is moved
-graphjs.canvas.addEventListener( "mousemove", setCursor );
-
-function setCursor() {
-
-    if( graphjs.mouseClicked ) return;
-
-    // prevent panning the graph if needed and set the cursor
-    graphjs.preventPanning      = ruler.nearRuler || triggering.nearDiamond;     
-    graphjs.canvas.style.cursor = ruler.nearRuler || triggering.nearDiamond ? "move" : "auto";
-}
-
-function drawCrosshairAtCursor( ctx ) {
-
-    // draw a pair of dotted lines across the canvas centered on the mouse
-    ctx.strokeStyle = "#888888";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([6, 6]);
-
-    graphjs.drawVerticalLine(   graphjs.mousePosOnCanvas.x );
-    graphjs.drawHorizontalLine( graphjs.mousePosOnCanvas.y );
-
-    ctx.setLineDash([]);
-}
+const graphjs    = new Graph("graphjs");
+const femtoscope = new Femtoscope();

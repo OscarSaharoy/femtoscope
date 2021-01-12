@@ -39,14 +39,14 @@ class Triggering {
 
 	drawDiamond( graph ) {
 
-		if( !this.showDiamond || showfft ) return;
+		if( !this.showDiamond || femtoscope.showfft ) return;
 
 		const ctx = graph.ctx;
 		const diamondPosOnCanvas = graph.graphToCanvas( this.diamondPos );
 
 	    // if we're currently dragging the diamond, draw dotted horizontal and vertical lines
 	    // at the mouse position to help alignment
-		if( this.dragging ) drawCrosshairAtCursor( ctx );
+		if( this.dragging ) femtoscope.drawCrosshairAtCursor( ctx );
 
 		ctx.strokeStyle = this.diamondColour;
 		ctx.fillStyle   = "white";
@@ -67,7 +67,7 @@ class Triggering {
 
 	onMousemove( event ) {
 
-		if( !this.showDiamond || showfft ) return;
+		if( !this.showDiamond || femtoscope.showfft ) return;
 
 		// condition to check if we're draging the diamond
 		this.dragging = this.graph.mouseClicked && this.nearDiamond;

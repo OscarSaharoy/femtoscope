@@ -47,7 +47,7 @@ async function connectToSerial( event ) {
 
     try {
         // start the data collection loop
-        await collectData(serialReader);
+        await femtoscope.collectData(serialReader);
     }
     catch(err) {
 

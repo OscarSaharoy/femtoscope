@@ -71,7 +71,7 @@ async function collectData(reader) {
             processData();
 
             // pause if we're in triggering mode single
-            paused = triggeringMode == Triggering.SINGLE;
+            paused = triggering.mode == TriggerModes.SINGLE;
 
             startTime = performance.now();
         }
@@ -110,24 +110,24 @@ function updateGraphPoints() {
         var n = 0;
         var xyPoints = points.map( x => new vec2(n+=sampleTime, x) );
 
-        if( triggeringMode == Triggering.NONE ) {
+        if( triggering.mode == TriggerModes.NONE ) {
 
             graphjs.points = xyPoints;
             return;
         }
 
-        var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggerPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
+        var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggering.diamondPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
 
         if( !triggerPoints.length ) {
 
-            triggerColour = "#FF0000";
+            triggering.diamondColour = "#FF0000";
             graphjs.points = xyPoints;
             return;
         }
 
-        triggerColour = "#FFAB21";
-        var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggerPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
-        var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggerPos.x - triggerCrossingPoint.x, 0) ) );
+        triggering.diamondColour = "#FFAB21";
+        var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
+        var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
 
         graphjs.points = shiftedPoints;
     }

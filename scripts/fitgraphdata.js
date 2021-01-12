@@ -9,8 +9,8 @@ function fitToData() {
     // if there's too few points then return
     if( graphjs.points.length < 2 ) return;
 
-    const topRight   = vec2.minusInfinity();
-    const bottomLeft = vec2.infinity();
+    const topRight   = vec2.minusInfinity;
+    const bottomLeft = vec2.infinity;
 
     // find the topright and bottomleft points that contain all the data
     for( point of graphjs.points ) {

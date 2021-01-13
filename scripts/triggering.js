@@ -6,9 +6,6 @@ class Triggering {
 
 	constructor() {
 
-		// reference to the graph
-		this.graph = graphjs;
-
 		// select element that controls the triggering setting
 		this.select = document.getElementById("triggering");
 		this.select.onchange = () => this.setTriggering();
@@ -23,10 +20,10 @@ class Triggering {
 		this.diamondColour = "#FFAB21"
 
 		// register the drawDiamond function
-		this.graph.userDrawFunctions.push( graph => this.drawDiamond(graph) );
+		graphjs.userDrawFunctions.push( graph => this.drawDiamond(graph) );
 
 		// sets the neadDiamond flag
-		this.graph.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
+		graphjs.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
 	}
 
 	setTriggering() {
@@ -34,7 +31,7 @@ class Triggering {
 	    // update the triggering mode
 		this.mode        = parseInt( this.select.value );
 		this.showDiamond = this.mode == TriggerModes.SINGLE || this.mode == TriggerModes.REPEAT;
-		this.diamondPos  = this.graph.getCentre();
+		this.diamondPos  = graphjs.getCentre();
 	}
 
 	drawDiamond( graph ) {
@@ -70,17 +67,15 @@ class Triggering {
 		if( !this.showDiamond || femtoscope.showfft ) return;
 
 		// condition to check if we're draging the diamond
-		this.dragging = this.graph.mouseClicked && this.nearDiamond;
+		this.dragging = graphjs.mouseClicked && this.nearDiamond;
 
 		// set the diamond pos if we're dragging it
-		if( this.dragging ) this.diamondPos.setv( this.graph.mousePos );
+		if( this.dragging ) this.diamondPos.setv( graphjs.mousePos );
 
 		// if the mouse is clicked then don't need to update the this.nearDiamond flag
-		if( this.graph.mouseClicked ) return;
+		if( graphjs.mouseClicked ) return;
 
 		// set to true if mouse is less than 11 pixels away from the diamond
-		this.nearDiamond = vec2.sqrDist( this.graph.mousePosOnCanvas, this.graph.graphToCanvas( this.diamondPos ) ) < 120;
+		this.nearDiamond = vec2.sqrDist( graphjs.mousePosOnCanvas, graphjs.graphToCanvas( this.diamondPos ) ) < 120;
 	}
 }
-
-const triggering = new Triggering();

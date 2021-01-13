@@ -29,5 +29,3 @@ class NoSerialWarning {
         this.warningDiv.style.display = "none";
     }
 }
-
-const noSerialWarning = new NoSerialWarning();

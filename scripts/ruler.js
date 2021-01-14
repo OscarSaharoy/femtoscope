@@ -2,7 +2,10 @@
 
 class Ruler {
 
-    constructor() {
+    constructor( femtoscope, graph ) {
+
+        this.graph      = graph;
+        this.femtoscope = femtoscope;
         
         // button that adds a ruler to the graph
         this.button = document.getElementById("add-ruler");
@@ -28,11 +31,11 @@ class Ruler {
         window.addEventListener( "keydown", e => this.cancelOnEsc(e) );
 
         // add the draw function in to be called each frame
-        graphjs.userDrawFunctions.push( graph => this.draw(graph) );
+        this.graph.userDrawFunctions.push( graph => this.draw(graph) );
         
         // setup event listeners
-        graphjs.canvas.addEventListener( "click",     e => this.onClick(e)     );
-        graphjs.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
+        this.graph.canvas.addEventListener( "click",     e => this.onClick(e)     );
+        this.graph.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
 
         // ruler stats are messy
         this.stats = [
@@ -59,11 +62,11 @@ class Ruler {
         this.button.onclick   = () => this.remove();
 
         // prevent graph panning
-        graphjs.preventPanning = true;
+        this.graph.preventPanning = true;
         this.creating = true;
 
         // setup the ruler start to follow the mouse position
-        this.startPos = graphjs.mousePos;
+        this.startPos = this.graph.mousePos;
         this.endPos   = vec2.notANumber;
     }
 
@@ -76,15 +79,15 @@ class Ruler {
         if( vec2.isNaN( this.endPos ) ) {
 
             // set the start position and set the end to follow the mouse
-            this.startPos = vec2.clone( graphjs.mousePos );
-            this.endPos   = graphjs.mousePos;
+            this.startPos = vec2.clone( this.graph.mousePos );
+            this.endPos   = this.graph.mousePos;
         }
 
         // else we are placing the end of the ruler
         else {
 
             // set the end position
-            this.endPos = vec2.clone( graphjs.mousePos );
+            this.endPos = vec2.clone( this.graph.mousePos );
 
             // set the created flag and call finishCreating
             this.created = true;
@@ -112,21 +115,21 @@ class Ruler {
         this.button.onclick    = () => this.create();
 
         // re enable graph panning and set creating flag
-        graphjs.preventPanning = false;
+        this.graph.preventPanning = false;
         this.creating             = false;
     }
 
     dragRuler(event) {
 
         if( this.nearStart )
-            this.startPos.setv( graphjs.mousePos );
+            this.startPos.setv( this.graph.mousePos );
 
         else if( this.nearEnd )
-            this.endPos.setv( graphjs.mousePos );
+            this.endPos.setv( this.graph.mousePos );
 
         else {
-            this.startPos.incBy( graphjs.mouseMove );
-            this.endPos.incBy(   graphjs.mouseMove );
+            this.startPos.incBy( this.graph.mouseMove );
+            this.endPos.incBy(   this.graph.mouseMove );
         }
 
         // update the stats for the ruler
@@ -142,27 +145,27 @@ class Ruler {
         if( !this.created ) return;
 
         // flag to tell the drawing routine if we need to draw the dotted crosshair
-        this.draggingEnd = graphjs.mouseClicked && ( this.nearStart || this.nearEnd );
+        this.draggingEnd = this.graph.mouseClicked && ( this.nearStart || this.nearEnd );
 
         // if clicked, moving mouse and near the ruler then we must be dragging the ruler
-        if( graphjs.mouseClicked && this.nearRuler ) this.dragRuler(event);
+        if( this.graph.mouseClicked && this.nearRuler ) this.dragRuler(event);
 
         // only update cursor and closeness flags if mouse is not clicked
-        if( !graphjs.mouseClicked ) this.checkIfNearRuler();
+        if( !this.graph.mouseClicked ) this.checkIfNearRuler();
     }
 
     checkIfNearRuler() {
 
-        const rulerStartOnCanvas = graphjs.graphToCanvas( this.startPos );
-        const rulerEndOnCanvas   = graphjs.graphToCanvas( this.endPos   );
+        const rulerStartOnCanvas = this.graph.graphToCanvas( this.startPos );
+        const rulerEndOnCanvas   = this.graph.graphToCanvas( this.endPos   );
         const startToEndOnCanvas = vec2.sub(rulerEndOnCanvas, rulerStartOnCanvas);
 
         // check if mouse is near to either ruler end
-        this.nearStart = vec2.sqrDist( graphjs.mousePosOnCanvas, rulerStartOnCanvas ) < 120;
-        this.nearEnd   = vec2.sqrDist( graphjs.mousePosOnCanvas, rulerEndOnCanvas   ) < 120;
+        this.nearStart = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerStartOnCanvas ) < 120;
+        this.nearEnd   = vec2.sqrDist( this.graph.mousePosOnCanvas, rulerEndOnCanvas   ) < 120;
 
         // fraction of the distance along the line that is closest to the mouse
-        var lambda = vec2.dot( vec2.sub(graphjs.mousePosOnCanvas, rulerStartOnCanvas), startToEndOnCanvas ) 
+        var lambda = vec2.dot( vec2.sub(this.graph.mousePosOnCanvas, rulerStartOnCanvas), startToEndOnCanvas ) 
                    / vec2.dot( startToEndOnCanvas, startToEndOnCanvas );
 
         // limit the fraction along the line between 0 and 1
@@ -170,7 +173,7 @@ class Ruler {
 
         // caclculate distance to closest point
         const closestPointOnRuler = vec2.lerp( rulerStartOnCanvas, rulerEndOnCanvas, lambda );
-        this.nearRuler = vec2.sqrDist( graphjs.mousePosOnCanvas, closestPointOnRuler ) < 120;
+        this.nearRuler = vec2.sqrDist( this.graph.mousePosOnCanvas, closestPointOnRuler ) < 120;
     }
 
     updateStats() {
@@ -201,7 +204,7 @@ class Ruler {
 
         // if we're currently moving an endpoint, draw dotted horizontal and vertical lines
         // at the mouse position to help alignment
-        if( this.creating || this.draggingEnd ) femtoscope.drawCrosshairAtCursor( ctx );
+        if( this.creating || this.draggingEnd ) this.femtoscope.drawCrosshairAtCursor( ctx );
 
         ctx.setLineDash([]); 
         ctx.strokeStyle = "#54f3f4";

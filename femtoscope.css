@@ -13,28 +13,31 @@ body {
     grid-template-columns: 70% 1.5rem auto;
 }
 
-#no-serial {
-    display: grid;
-    width: 100vw;
-    height: 100vh;
-    justify-content: center;
-    align-content: center;
-    font-size: 1.5rem;
-}
-
-#no-serial-continue {
-    margin-top: 3rem;
-    font-size: 1.2rem;
-    text-align: center;
-}
-
-
 #graphjs {
     justify-self: stretch;
     height: 100vh;
     grid-column: 1;
     display: grid;
     transform: translateZ(0);
+}
+
+#right-click-menu {
+    position: fixed;
+    background: white;
+    display: grid;
+    border: 2px solid black;
+    margin: -1px;
+    visibility: hidden;
+    user-select: none;
+}
+
+#right-click-menu p {
+    padding: 0.4rem 0.6rem;
+}
+
+#right-click-menu p:hover {
+    background-color: #dddddd;
+    cursor: pointer;
 }
 
 #divider {
@@ -45,7 +48,7 @@ body {
 
 #control-panel {
     width: 100%;
-    min-width: 23rem;
+    min-width: 25rem;
     grid-column: 3;
     padding: 1rem 2rem 1rem 0.5rem;
     overflow: auto;
@@ -53,6 +56,11 @@ body {
 
 #control-panel:focus {
     outline: none;
+}
+
+#title-grid {
+    display: grid;
+    grid-template-columns: auto 2.75rem 2.5rem;
 }
 
 h1 {
@@ -68,6 +76,131 @@ h1 strong {
 h2 {
     font-size: 1.2rem;
     font-weight: 500;
+}
+
+.info-button {
+    position: relative;
+    width:  2.8rem;
+    height: 2.8rem;
+    cursor: pointer;
+    border-radius: 1.5rem;
+    border: 0.1rem solid black;
+    transition: all 0.4s;
+    z-index: 101;
+    grid-column: 3;
+    transform: scale(0.9) translateY(0.3rem);
+}
+
+.info-button .i-back {
+    position: relative;
+    height: 3rem;
+    width: 3rem;
+    border-radius: 1.5rem;
+    background: white;
+    left: -0.2rem;
+    top: -0.2rem;
+    transform: rotateZ(0deg) scaleY(0);
+    transition: all 0.4s;
+}
+
+.info-button .i-back-cross {
+    transform: rotateZ(180deg) scaleY(1);
+}
+
+.info-button .i-body {
+    width:  0.25rem;
+    height: 1rem;
+    background: black;
+    position: relative;
+    left: 1.17rem;
+    top: -1.95rem;
+    transition: all 0.4s;
+}
+
+.info-button .i-body-cross {
+    transform: translateY(-0.25rem) rotateZ(45deg) scaleY(2.2) scaleX(0.7);
+}
+
+.info-button .i-dot {
+    width:  0.25rem;
+    height: 0.25rem;
+    background: black;
+    position: relative;
+    left: 1.17rem;
+    top: -3.4rem;
+    transition: all 0.4s;
+}
+
+.info-button .i-dot-cross {
+    transform: translateY(0.6rem) rotateZ(-45deg) scaleY(8.7) scaleX(0.7);
+}
+
+.info-screen {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    background: white;
+    transform: translateX(100vw);
+    transition: all 0.4s;
+    border-left: 2px solid black;
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    font-size: 1.5rem;
+    z-index: 100;
+}
+
+.info-screen-onscreen {
+    transform: translateX(0);
+}
+
+.play-button {
+    width: 1.8rem;
+    height: 1.8rem;
+    cursor: pointer;
+    grid-column: 2;
+    transform: translateY(0.55rem);
+}   
+
+.play-button .play-triangle {
+    border: 1.85rem solid black;
+    border-top: 1.15rem solid transparent;
+    border-bottom: 1.15rem solid transparent;
+    border-right: none;
+    transition: all 0.3s;
+}
+
+.play-button .play-square-paused {
+}
+
+.play-button .play-square {
+    position: relative;
+    background: black;
+    width: 1.85rem;
+    height: 2.3rem;
+    transform: translateY(-2.3rem) scaleY(0);
+    transition: all 0.3s;
+    transition-timing-function: cubic-bezier(1,-0.12,.63,.72);
+}
+
+.play-button .play-square-paused {
+    transform: translateY(-2.3rem) scaleY(1);
+}
+
+.play-button .play-white {
+    position: relative;
+    background: white;
+    width: 0.6rem;
+    height: 2.3rem;
+    transform: translateY(-4.6rem) translateX(0.625rem) scaleX(0);
+    transition: all 0.3s;
+    transition-timing-function: cubic-bezier(.08,.96,0,1.05);
+}
+
+.play-button .play-white-paused {
+    transform: translateY(-4.6rem) translateX(0.625rem) scaleX(1);
 }
 
 button {
@@ -185,4 +318,21 @@ button:active {
 
 #settings input:focus {
     outline: 3px solid #cccccc;
+}
+
+#no-serial {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    font-size: 1.5rem;
+    position: fixed;
+    background: white;
+}
+
+#no-serial-continue {
+    margin-top: 3rem;
+    font-size: 1.2rem;
+    text-align: center;
 }

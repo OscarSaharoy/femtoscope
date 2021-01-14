@@ -2,7 +2,9 @@
 
 class SerialConnection {
         
-    constructor() {
+    constructor( femtoscope ) {
+
+        this.femtoscope = femtoscope;
 
         // the connect to serial button
         this.button = document.getElementById("connect");
@@ -48,7 +50,7 @@ class SerialConnection {
 
         try {
             // start the data collection loop
-            await femtoscope.collectData( this.reader );
+            await this.femtoscope.collectData( this.reader );
         }
         catch(err) {
 

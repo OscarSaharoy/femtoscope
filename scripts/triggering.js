@@ -4,7 +4,10 @@ const TriggerModes = { NONE: 0, SINGLE: 1, REPEAT: 2 };
 
 class Triggering {
 
-	constructor() {
+	constructor( femtoscope, graph ) {
+
+		this.graph      = graph;
+		this.femtoscope = femtoscope;
 
 		// select element that controls the triggering setting
 		this.select = document.getElementById("triggering");
@@ -20,10 +23,10 @@ class Triggering {
 		this.diamondColour = "#FFAB21"
 
 		// register the drawDiamond function
-		graphjs.userDrawFunctions.push( graph => this.drawDiamond(graph) );
+		this.graph.userDrawFunctions.push( graph => this.drawDiamond(graph) );
 
 		// sets the neadDiamond flag
-		graphjs.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
+		this.graph.canvas.addEventListener( "mousemove", e => this.onMousemove(e) );
 	}
 
 	setTriggering() {
@@ -31,19 +34,19 @@ class Triggering {
 	    // update the triggering mode
 		this.mode        = parseInt( this.select.value );
 		this.showDiamond = this.mode == TriggerModes.SINGLE || this.mode == TriggerModes.REPEAT;
-		this.diamondPos  = graphjs.getCentre();
+		this.diamondPos  = this.graph.getCentre();
 	}
 
 	drawDiamond( graph ) {
 
-		if( !this.showDiamond || femtoscope.showfft ) return;
+		if( !this.showDiamond || this.femtoscope.showfft ) return;
 
 		const ctx = graph.ctx;
 		const diamondPosOnCanvas = graph.graphToCanvas( this.diamondPos );
 
 	    // if we're currently dragging the diamond, draw dotted horizontal and vertical lines
 	    // at the mouse position to help alignment
-		if( this.dragging ) femtoscope.drawCrosshairAtCursor( ctx );
+		if( this.dragging ) this.femtoscope.drawCrosshairAtCursor( ctx );
 
 		ctx.strokeStyle = this.diamondColour;
 		ctx.fillStyle   = "white";
@@ -64,18 +67,18 @@ class Triggering {
 
 	onMousemove( event ) {
 
-		if( !this.showDiamond || femtoscope.showfft ) return;
+		if( !this.showDiamond || this.femtoscope.showfft ) return;
 
 		// condition to check if we're draging the diamond
-		this.dragging = graphjs.mouseClicked && this.nearDiamond;
+		this.dragging = this.graph.mouseClicked && this.nearDiamond;
 
 		// set the diamond pos if we're dragging it
-		if( this.dragging ) this.diamondPos.setv( graphjs.mousePos );
+		if( this.dragging ) this.diamondPos.setv( this.graph.mousePos );
 
 		// if the mouse is clicked then don't need to update the this.nearDiamond flag
-		if( graphjs.mouseClicked ) return;
+		if( this.graph.mouseClicked ) return;
 
 		// set to true if mouse is less than 11 pixels away from the diamond
-		this.nearDiamond = vec2.sqrDist( graphjs.mousePosOnCanvas, graphjs.graphToCanvas( this.diamondPos ) ) < 120;
+		this.nearDiamond = vec2.sqrDist( this.graph.mousePosOnCanvas, this.graph.graphToCanvas( this.diamondPos ) ) < 120;
 	}
 }

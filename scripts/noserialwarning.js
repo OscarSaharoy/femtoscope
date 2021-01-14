@@ -26,6 +26,6 @@ class NoSerialWarning {
 
     hide() {
 
-        this.warningDiv.style.display = "none";
+        this.warningDiv.remove();
     }
 }

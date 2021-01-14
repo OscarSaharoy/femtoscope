@@ -11,29 +11,51 @@
 
 <body>
 
-    <div id="no-serial">
-
-        <p> serial API is not enabled on this browser. to enable it: <br><br>
-
-                make sure you're using an updated version of chrome <br>
-                type "chrome://flags" into your search bar <br>
-                search for and enable the following flag: #enable-experimental-web-platform-features
-        </p>
-
-        <button id="no-serial-continue"> continue </button>
-
-        <script type="text/javascript" src="scripts/noserialwarning.js"> </script>
-    </div>
-
     <canvas width=1 height=1 id="graphjs"> </canvas>
+    
+    <div id="right-click-menu">
+        <p> item1 </p>
+        <p> item2 </p>
+        <p> item3 </p>
+    </div>
 
     <div id="divider"> </div>
 
     <div id="control-panel" tabindex="-1">
-
-        <!-- <img id="info" src="info.svg"> -->
         
-        <h1 style="margin-bottom: 1rem;"> femto<strong>scope</strong> </h1>
+        <div class="info-screen">
+
+            <p> 
+                femtoscope is meant to be a free alternative to picoscope. <br>
+                to make it work, you need a browser that supports serial API <br>
+                and a device plugged into a serial port on your pc (usually a usb port). <br>
+                This device must measure a voltage at regular intervals and <br>
+                send the measured value onto the serial link as a byte (0 is <br>
+                the minimum voltage measurable, and 255 the maximum) <br><br>
+
+                use ctrl and shift while scrolling on the graph to zoom in x and y directions only <br><br>
+
+                made by <a href="https://github.com/OscarSaharoy"> oscar saharoy </a>
+            </p>
+        </div>
+
+        <div id="title-grid"> 
+
+            <h1 style="margin-bottom: 1rem;"> femto<strong>scope</strong> </h1>
+
+            <div class="play-button">
+                <div class="play-triangle"> </div>
+                <div class="play-square"> </div>
+                <div class="play-white"> </div>
+            </div>
+
+            <div class="info-button">
+                <div class="i-back"> </div>
+                <div class="i-body"> </div>
+                <div class="i-dot"> </div>
+            </div>
+
+        </div>
 
         <button id="connect"> connect to serial 🔌 </button>
 
@@ -117,6 +139,20 @@
     
     </div>
 
+    <div id="no-serial">
+
+        <p> serial API is not enabled on this browser. to enable it: <br><br>
+
+                make sure you're using an updated version of chrome <br>
+                type "chrome://flags" into your search bar <br>
+                search for and enable the following flag: #enable-experimental-web-platform-features
+        </p>
+
+        <button id="no-serial-continue"> continue </button>
+
+        <script type="text/javascript" src="scripts/noserialwarning.js"> </script>
+    </div>
+
     <script type="text/javascript" src="../graph.js/vec2.js"> </script>
     <script type="text/javascript" src="../graph.js/graph.js"> </script>
     <script type="text/javascript" src="../minfft.js/minfft.js"> </script>
@@ -126,6 +162,8 @@
     <script type="text/javascript" src="scripts/serialconnection.js"> </script>
     <script type="text/javascript" src="scripts/ruler.js"> </script>
     <script type="text/javascript" src="scripts/dividermanager.js"> </script>
+    <script type="text/javascript" src="scripts/buttons.js"> </script>       
+    <script type="text/javascript" src="scripts/rightclickmenu.js"> </script>       
     <script type="text/javascript" src="scripts/femtoscope.js"> </script>
 </body>
 

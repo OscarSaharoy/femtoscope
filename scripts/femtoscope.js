@@ -2,7 +2,14 @@
 
 class Femtoscope {
 
-    constructor() {
+    constructor( graph ) {
+
+        this.graph = graph;
+        this.serialConnection = new SerialConnection( this );
+        this.buttons          = new Buttons();
+        this.ruler            = new Ruler( this, graph );
+        this.triggering       = new Triggering( this, graph );
+        this.rightClickMenu   = new RightClickMenu();
 
         // variable that decides if we show the fft or normal waveform
         this.showfft = false;
@@ -10,9 +17,6 @@ class Femtoscope {
         // data points array and the frequency spectrum of it
         this.points    = [];
         this.pointsfft = [];
-
-        // code for custom right click
-        graphjs.canvas.addEventListener( 'contextmenu', e => { e.preventDefault(); } );
 
         this.sampleTime = null;
         this.paused     = false;
@@ -22,7 +26,7 @@ class Femtoscope {
         this.trimToPowerOf2 = arr => arr.slice(0, 2 ** (Math.log2( arr.length ) | 0) );
 
         // set the cursor to what we want when the mouse is moved
-        graphjs.canvas.addEventListener( "mousemove", e => this.setCursor(e) );
+        this.graph.canvas.addEventListener( "mousemove", e => this.setCursor(e) );
 
         // button that toggles the graph between showing the fft of the signal or the original
         this.fftButton = document.getElementById("fft");
@@ -37,6 +41,9 @@ class Femtoscope {
         [this.sampleCountInput, this.minVoltageInput, this.maxVoltageInput] = this.samplingSettings;
 
         this.samplingSettings.forEach( x => x.addEventListener("input", () => this.updateSamplingSettings() ) );
+
+        // code for custom right click
+        this.graph.canvas.addEventListener( 'contextmenu', event => this.rightClickMenu.show(event) );
 
         // vars to hold info about the sampling
         this.sampleCount = 2048;
@@ -68,12 +75,10 @@ class Femtoscope {
         var pointsCollected = 0;
         var startTime = performance.now();
 
-        while (true) {
+        while( !this.paused ) {
 
             // wait for serial API to give us the data
             const { value, done } = await reader.read();
-
-            //if( this.paused ) continue;
 
             // close the serial port
             if (done) {
@@ -109,7 +114,11 @@ class Femtoscope {
                 this.processData();
 
                 // pause if we're in triggering mode single
-                this.paused = triggering.mode == TriggerModes.SINGLE;
+                if(this.triggering.mode == TriggerModes.SINGLE) {
+
+                    this.paused = true;
+                    this.buttons.playButton.click();
+                }
 
                 startTime = performance.now();
             }
@@ -136,7 +145,7 @@ class Femtoscope {
             
             // plot the frequencies on the graph
             var n = 0;
-            graphjs.points = this.pointsfft.map( x => new vec2(n++ / (this.sampleTime * this.sampleCount), x) );   
+            this.graph.points = this.pointsfft.map( x => new vec2(n++ / (this.sampleTime * this.sampleCount), x) );   
         }
         else {
 
@@ -144,36 +153,38 @@ class Femtoscope {
             var n = 0;
             var xyPoints = this.points.map( x => new vec2(n+=this.sampleTime, x) );
 
-            if( triggering.mode == TriggerModes.NONE ) {
+            if( this.triggering.mode == TriggerModes.NONE ) {
 
-                graphjs.points = xyPoints;
+                this.graph.points = xyPoints;
                 return;
             }
 
-            var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - triggering.diamondPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
+            var triggerPoints = xyPoints.filter( (p,i) => Math.abs(p.y - this.triggering.diamondPos.y) < 0.01 && i>10 && xyPoints[i-10].y < p.y && xyPoints[i-5].y < p.y );
 
             if( !triggerPoints.length ) {
 
-                triggering.diamondColour = "#FF0000";
-                graphjs.points = xyPoints;
+                this.triggering.diamondColour = "#FF0000";
+                this.graph.points = xyPoints;
                 return;
             }
+            
+            this.paused = this.triggering.mode == TriggerModes.SINGLE;
 
-            triggering.diamondColour = "#FFAB21";
-            var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
-            var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
+            this.triggering.diamondColour = "#FFAB21";
+            var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(this.triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
+            var shiftedPoints        = xyPoints.map( v => vec2.add(v, new vec2(this.triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
 
-            graphjs.points = shiftedPoints;
+            this.graph.points = shiftedPoints;
         }
     }
 
     setCursor() {
 
-        if( graphjs.mouseClicked ) return;
+        if( this.graph.mouseClicked ) return;
 
         // prevent panning the graph if needed and set the cursor
-        graphjs.preventPanning      = ruler.nearRuler || triggering.nearDiamond;     
-        graphjs.canvas.style.cursor = ruler.nearRuler || triggering.nearDiamond ? "move" : "auto";
+        this.graph.preventPanning      = this.ruler.nearRuler || this.triggering.nearDiamond;     
+        this.graph.canvas.style.cursor = this.ruler.nearRuler || this.triggering.nearDiamond ? "move" : "auto";
     }
 
     drawCrosshairAtCursor( ctx ) {
@@ -183,8 +194,8 @@ class Femtoscope {
         ctx.lineWidth = 1;
         ctx.setLineDash([6, 6]);
 
-        graphjs.drawVerticalLine(   graphjs.mousePosOnCanvas.x );
-        graphjs.drawHorizontalLine( graphjs.mousePosOnCanvas.y );
+        this.graph.drawVerticalLine(   this.graph.mousePosOnCanvas.x );
+        this.graph.drawHorizontalLine( this.graph.mousePosOnCanvas.y );
 
         ctx.setLineDash([]);
     }
@@ -200,19 +211,19 @@ class Femtoscope {
         // update the graph display and remove the ruler
         this.updateGraphPoints();
         this.fitToData();
-        ruler.remove();
+        this.ruler.remove();
     }
 
     fitToData() {
 
         // if there's too few points then return
-        if( graphjs.points.length < 2 ) return;
+        if( this.graph.points.length < 2 ) return;
 
         const topRight   = vec2.minusInfinity;
         const bottomLeft = vec2.infinity;
 
         // find the topright and bottomleft points that contain all the data
-        for( point of graphjs.points ) {
+        for( point of this.graph.points ) {
 
             topRight.setIfGreater( point );
             bottomLeft.setIfLess(  point );
@@ -225,7 +236,7 @@ class Femtoscope {
         const centre = vec2.add( topRight, bottomLeft ).scaleBy( 0.5 );
 
         // set the graph range with these, calling vec2.lerp to give some padding to the data on the graph
-        graphjs.setRange( vec2.lerp( centre, bottomLeft, 1.2 ), vec2.lerp( centre, topRight, 1.2 ) );
+        this.graph.setRange( vec2.lerp( centre, bottomLeft, 1.2 ), vec2.lerp( centre, topRight, 1.2 ) );
     }
 
     updateSamplingSettings() {
@@ -239,14 +250,20 @@ class Femtoscope {
         this.voltageMin  = Math.min( voltage1, voltage2 );
         this.voltageMax  = Math.max( voltage1, voltage2 );
     }
+
+    openRightClickMenu(event) {
+
+
+    }
 }
 
 
-// all of these are global consts
-const graphjs          = new Graph("graphjs");
-const femtoscope       = new Femtoscope();
-const serialConnection = new SerialConnection();
-const ruler            = new Ruler();
-const dividerManager   = new DividerManager();
-const noSerialWarning  = new NoSerialWarning();
-const triggering       = new Triggering();
+( () => {
+
+    // make the application objects
+    const graphjs          = new Graph("graphjs");
+    const femtoscope       = new Femtoscope( graphjs );
+    const dividerManager   = new DividerManager( "divider", graphjs );
+    const noSerialWarning  = new NoSerialWarning();
+
+} )();

@@ -2,11 +2,13 @@
 
 class DividerManager {
 
-	constructor( dividerId ) {
+	constructor( dividerId, graph ) {
 
 		// the divider between the graph and UI
 		this.divider = document.getElementById( dividerId );
 		this.dividerClicked = false;
+
+		this.graph = graph;
 
 		// event listeners to enable dragging of the divider
 		divider.addEventListener(  "mousedown",  e => { this.dividerClicked = true;  } );
@@ -22,6 +24,6 @@ class DividerManager {
 	    // change the body's column template - change amount of screen that is graph/UI
 	    document.body.style.gridTemplateColumns = ( e.clientX-10 ).toString() + "px 1.5rem auto";
 
-	    graphjs.resize();
+	    this.graph.resize();
 	}
 }

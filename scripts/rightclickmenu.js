@@ -5,7 +5,7 @@ class RightClickMenu {
 	constructor() {
 
 		this.div = document.getElementById( "right-click-menu" );
-		window.addEventListener( "click", () => this.hide() );
+		window.addEventListener( "mousedown", () => { if( !this.div.contains(event.target) ) this.hide(); } );
 	}
 
 	show(event) {

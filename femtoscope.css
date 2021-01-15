@@ -182,11 +182,12 @@ h2 {
     height: 2.3rem;
     transform: translateY(-2.3rem) scaleY(0);
     transition: all 0.3s;
-    transition-timing-function: cubic-bezier(1,-0.12,.63,.72);
+    transition-timing-function: cubic-bezier(.64,1.42,.55,.9);
 }
 
 .play-button .play-square-paused {
     transform: translateY(-2.3rem) scaleY(1);
+    transition-timing-function: cubic-bezier(1,-0.12,.63,.72);
 }
 
 .play-button .play-white {
@@ -196,11 +197,12 @@ h2 {
     height: 2.3rem;
     transform: translateY(-4.6rem) translateX(0.625rem) scaleX(0);
     transition: all 0.3s;
-    transition-timing-function: cubic-bezier(.08,.96,0,1.05);
+    transition-timing-function: cubic-bezier(.37,-0.07,.94,-0.43);
 }
 
 .play-button .play-white-paused {
     transform: translateY(-4.6rem) translateX(0.625rem) scaleX(1);
+    transition-timing-function: cubic-bezier(.08,.96,0,1.05);
 }
 
 button {

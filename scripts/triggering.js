@@ -35,6 +35,7 @@ class Triggering {
 		this.mode        = parseInt( this.select.value );
 		this.showDiamond = this.mode == TriggerModes.SINGLE || this.mode == TriggerModes.REPEAT;
 		this.diamondPos  = this.graph.getCentre();
+		this.femtoscope.resume();
 	}
 
 	drawDiamond( graph ) {

@@ -6,7 +6,7 @@ class Femtoscope {
 
         this.graph = graph;
         this.serialConnection = new SerialConnection( this );
-        this.buttons          = new Buttons();
+        this.buttons          = new Buttons( this );
         this.ruler            = new Ruler( this, graph );
         this.triggering       = new Triggering( this, graph );
         this.rightClickMenu   = new RightClickMenu();
@@ -19,7 +19,7 @@ class Femtoscope {
         this.pointsfft = [];
 
         this.sampleTime = null;
-        this.paused     = false;
+        this.paused     = true;
 
         // the windowing function that femtoscope uses (hamming)
         this.windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
@@ -75,7 +75,7 @@ class Femtoscope {
         var pointsCollected = 0;
         var startTime = performance.now();
 
-        while( !this.paused ) {
+        while( true ) {
 
             // wait for serial API to give us the data
             const { value, done } = await reader.read();
@@ -88,6 +88,10 @@ class Femtoscope {
                 console.log("serial port lost...");
 
                 break;
+            }
+
+            if( this.paused ) {
+                continue;
             }
 
             // make a new array of floats from the collects UInt8Array
@@ -113,16 +117,14 @@ class Femtoscope {
                 pointsCollected = 0;
                 this.processData();
 
-                // pause if we're in triggering mode single
-                if(this.triggering.mode == TriggerModes.SINGLE) {
-
-                    this.paused = true;
-                    this.buttons.playButton.click();
-                }
-
                 startTime = performance.now();
             }
         }
+    }
+
+    resume() {
+
+        if(this.paused) this.buttons.playButton.click();
     }
 
     processData() {
@@ -167,8 +169,13 @@ class Femtoscope {
                 this.graph.points = xyPoints;
                 return;
             }
-            
-            this.paused = this.triggering.mode == TriggerModes.SINGLE;
+
+            // pause if we're in triggering mode single
+            if(this.triggering.mode == TriggerModes.SINGLE) {
+
+                this.paused = true;
+                this.buttons.playButton.click();
+            }
 
             this.triggering.diamondColour = "#FFAB21";
             var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(this.triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
@@ -249,11 +256,6 @@ class Femtoscope {
 
         this.voltageMin  = Math.min( voltage1, voltage2 );
         this.voltageMax  = Math.max( voltage1, voltage2 );
-    }
-
-    openRightClickMenu(event) {
-
-
     }
 }
 

@@ -3,7 +3,9 @@
 
 class Buttons {
 
-	constructor() {
+	constructor( femtoscope ) {
+
+		this.femtoscope = femtoscope;
 
 		this.infoButton   = document.querySelector(".info-button");
 		this.iBody        = document.querySelector(".info-button .i-body");
@@ -45,6 +47,8 @@ class Buttons {
 	onPlayClick() {
 
 		this.playClicked = !this.playClicked;
+
+		this.femtoscope.paused = !this.playClicked;
 
 		if( this.playClicked ) {
 			this.playTriangle.classList.add("play-triangle-paused");

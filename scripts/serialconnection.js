@@ -50,6 +50,7 @@ class SerialConnection {
 
         try {
             // start the data collection loop
+            this.femtoscope.resume();
             await this.femtoscope.collectData( this.reader );
         }
         catch(err) {

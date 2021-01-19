@@ -1,6 +1,6 @@
 // Oscar Saharoy 2020
 
-const TriggerModes = { NONE: 0, SINGLE: 1, REPEAT: 2 };
+const TriggerModes = { NONE: 0, CONTINUOUS: 1, SINGLE: 2, REPEAT: 3 };
 
 class Triggering {
 
@@ -13,7 +13,7 @@ class Triggering {
 		this.select = document.getElementById("triggering");
 		this.select.onchange = () => this.setTriggering();
 
-		this.mode        = TriggerModes.NONE;
+		this.mode        = TriggerModes.CONTINUOUS;
 		this.diamondPos  = vec2.zero;
 		this.showDiamond = false;
 		this.nearDiamond = false;
@@ -35,7 +35,7 @@ class Triggering {
 		this.mode        = parseInt( this.select.value );
 		this.showDiamond = this.mode == TriggerModes.SINGLE || this.mode == TriggerModes.REPEAT;
 		this.diamondPos  = this.graph.getCentre();
-		this.femtoscope.resume();
+		this.femtoscope.unpause();
 	}
 
 	drawDiamond( graph ) {

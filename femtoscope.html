@@ -14,9 +14,11 @@
     <canvas width=1 height=1 id="graphjs"> </canvas>
     
     <div id="right-click-menu">
-        <p> item1 </p>
-        <p> item2 </p>
-        <p> item3 </p>
+        <button id="rcm-play-pause"> pause </button>
+        <button id="rcm-fit-data"> fit to data </button>
+        <button id="rcm-show-fft"> toggle fft </button>
+        <button id="rcm-add-ruler"> add ruler </button>
+        <button id="rcm-remove-ruler"> remove ruler </button>
     </div>
 
     <div id="divider"> </div>
@@ -65,8 +67,9 @@
 	    
 	    <select id="triggering">
         	<option value="0"> none </option>
-        	<option value="1"> single </option>
-        	<option value="2"> repeat </option>
+            <option value="1" selected="selected"> continuous </option>
+        	<option value="2"> single </option>
+        	<option value="3"> repeat </option>
         </select>
 
         <p id="triggering-text"> triggering 🔫 </p>

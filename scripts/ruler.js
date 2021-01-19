@@ -64,6 +64,7 @@ class Ruler {
         // prevent graph panning
         this.graph.preventPanning = true;
         this.creating = true;
+        this.created  = false;
 
         // setup the ruler start to follow the mouse position
         this.startPos = this.graph.mousePos;

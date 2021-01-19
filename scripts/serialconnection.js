@@ -49,8 +49,8 @@ class SerialConnection {
         }
 
         try {
+
             // start the data collection loop
-            this.femtoscope.resume();
             await this.femtoscope.collectData( this.reader );
         }
         catch(err) {
@@ -62,7 +62,13 @@ class SerialConnection {
 
             this.setButton( "lost connection 😞 click to reconnect", () => this.connectToSerial() );
         }
-    };
+    }
+
+    readerLost() {
+
+        reader.releaseLock();
+        console.log("serial port lost...");
+    }
 
     async disconnectFromSerial() {
 

@@ -165,7 +165,7 @@ class Femtoscope {
         var pointsToUse   = this.showfft ? this.pointsfft : this.points;
 
         // update the graph points
-        var n = 0;
+        var n = -dn;
         this.graph.points = pointsToUse.map( x => new vec2(n+=dn, x) );  
     }
 

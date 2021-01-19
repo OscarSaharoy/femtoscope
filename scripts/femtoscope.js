@@ -142,7 +142,7 @@ class Femtoscope {
 
     togglePause() {
 
-        (this.paused ^= 1) ? this.buttons.pause() : this.buttons.unpause();
+        this.paused ? this.unpause() : this.pause();
     }
 
     processData( startTime, endTime ) {

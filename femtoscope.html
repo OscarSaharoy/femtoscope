@@ -33,7 +33,8 @@
                 and a device plugged into a serial port on your pc (usually a usb port). <br>
                 This device must measure a voltage at regular intervals and <br>
                 send the measured value onto the serial link as a byte (0 is <br>
-                the minimum voltage measurable, and 255 the maximum) <br><br>
+                the minimum voltage measurable, and 255 the maximum, and the <br>
+                baudrate is 500,000) <br><br>
 
                 use ctrl and shift while scrolling on the graph to zoom in x and y directions only <br><br>
 
@@ -136,7 +137,7 @@
 
             <input id="voltage-range-min" style="grid-column: 2;" type="number" value="0"> </input>
             <p style="grid-column: 3;"> - </p>
-            <input id="voltage-range-max" style="grid-column: 4;" type="number" value="3.3"> </input>
+            <input id="voltage-range-max" style="grid-column: 4;" type="number" value="5"> </input>
             <!-- <p id="sample-rate" style="grid-column-start: 1; grid-column-end: 4;"> - </p> -->
         </div>
     

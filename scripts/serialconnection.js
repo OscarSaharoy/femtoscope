@@ -28,7 +28,7 @@ class SerialConnection {
             console.log("got port!");
 
             // open the port and get the reader object
-            await this.port.open({ baudRate: 57600 });
+            await this.port.open({ baudRate: 500000 });
             console.log("opened port!");
 
             this.reader = this.port.readable.getReader();
@@ -66,7 +66,7 @@ class SerialConnection {
 
     readerLost() {
 
-        reader.releaseLock();
+        this.reader.releaseLock();
         console.log("serial port lost...");
     }
 

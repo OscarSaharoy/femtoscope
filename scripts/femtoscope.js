@@ -24,7 +24,7 @@ class Femtoscope {
         // vars to hold info about the sampling
         this.sampleCount = 2048;
         this.voltageMin  = 0;
-        this.voltageMax  = 3.3;
+        this.voltageMax  = 5;
 
         // set the cursor to what we want when the mouse is moved
         this.graph.canvas.addEventListener( "mousemove",   event => this.setCursor(event)           );
@@ -84,7 +84,7 @@ class Femtoscope {
             const { value, done } = await reader.read();
 
             // if the reader is lost then handle this
-            if( done ) return serialConnection.readerLost();
+            if( done ) return this.serialConnection.readerLost();
 
             if( this.paused ) {
 

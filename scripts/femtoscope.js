@@ -264,13 +264,8 @@ class Femtoscope {
     }
 }
 
-
-( () => {
-
-    // make the application objects
-    const graphjs          = new Graph("graphjs");
-    const femtoscope       = new Femtoscope( graphjs );
-    const dividerManager   = new DividerManager( "divider", graphjs );
-    const noSerialWarning  = new NoSerialWarning();
-
-} )();
+// make the application objects
+const graphjs          = new Graph("graphjs");
+const femtoscope       = new Femtoscope( graphjs );
+const dividerManager   = new DividerManager( "divider", graphjs );
+const noSerialWarning  = new NoSerialWarning();

@@ -66,10 +66,23 @@ class SerialConnection {
         }
     }
 
+    sendSamplingRate( rate ) {
+
+        // get the 4 bytes of the new sampling rate as a float
+        const buffer = new ArrayBuffer(4);
+        ( new Float32Array(buffer) )[0] = rate;
+        const bytes = new Uint8Array( buffer );
+
+        // write those 4 bytes to the serial connection
+        this.writer.write( bytes );
+    }
+
     readerLost() {
 
         this.reader.releaseLock();
         this.writer.releaseLock();
+        this.port = null;
+        
         console.log("serial port lost...");
     }
 
@@ -78,6 +91,7 @@ class SerialConnection {
         // try to cancel the serial connection
         await this.reader.cancel();
         await this.port.close();
+        this.port = null;
 
         console.log("disconnected successfully!");
         

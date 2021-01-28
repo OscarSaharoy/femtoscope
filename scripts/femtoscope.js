@@ -264,7 +264,10 @@ class Femtoscope {
         this.voltageMax   = Math.max( voltage1, voltage2 );
 
         // send a request to the arduino to change the sampling rate
-        var newSampleRate = Math.max( parseInt( this.sampleRateInput.value  ), 0 );
+        var newSampleRate = Math.max( parseFloat( this.sampleRateInput.value  ), 0 );
+
+        // only send the sampling rate if we have the port
+        if( this.serialConnection.port ) this.serialConnection.sendSamplingRate( newSampleRate );
     }
 }
 

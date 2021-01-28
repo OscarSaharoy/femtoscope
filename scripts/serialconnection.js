@@ -13,6 +13,7 @@ class SerialConnection {
         // varaibles that hold the serial port and reader objects
         this.port   = null;
         this.reader = null;
+        this.writer = null;
     }
 
     async connectToSerial() {
@@ -32,15 +33,16 @@ class SerialConnection {
             console.log("opened port!");
 
             this.reader = this.port.readable.getReader();
-            console.log("got reader!");
+            this.writer = this.port.writable.getWriter();
+            console.log("got reader & writer!");
 
             // change button to success message
             this.setButton( "connected 😄 click to disconnect", () => this.disconnectFromSerial() );
         }
-        catch {
+        catch(err) {
             
             // error occurs when user doesn't select a serial port
-            console.log("failed to connect :(");
+            console.log("failed to connect :(", err);
 
             // reset button and exit function
             this.setButton( "connect to serial 🔌", () => this.connectToSerial() );
@@ -67,6 +69,7 @@ class SerialConnection {
     readerLost() {
 
         this.reader.releaseLock();
+        this.writer.releaseLock();
         console.log("serial port lost...");
     }
 

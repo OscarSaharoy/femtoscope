@@ -12,14 +12,15 @@ class Femtoscope {
         this.rightClickMenu   = new RightClickMenu( this );
 
         // variable that decides if we show the fft or normal waveform
-        this.showfft = false;
+        this.showfft     = false;
 
         // data points array and the frequency spectrum of it
-        this.points    = [];
-        this.pointsfft = [];
+        this.points      = [];
+        this.pointsfft   = [];
 
-        this.sampleTime = null;
-        this.paused     = false;
+        // time per sample and bool true when paused
+        this.sampleTime  = null;
+        this.paused      = false;
 
         // vars to hold info about the sampling
         this.sampleCount = 2048;
@@ -39,8 +40,8 @@ class Femtoscope {
         this.fitDataButton.onclick = () => this.fitToData();
 
         // get all the inputs that control sampling settings
-        this.samplingSettings = ["sample-count", "voltage-range-min", "voltage-range-max"].map( id => document.getElementById(id) );
-        [this.sampleCountInput, this.minVoltageInput, this.maxVoltageInput] = this.samplingSettings;
+        this.samplingSettings = ["sample-rate", "sample-count", "voltage-range-min", "voltage-range-max"].map( id => document.getElementById(id) );
+        [this.sampleRateInput, this.sampleCountInput, this.minVoltageInput, this.maxVoltageInput] = this.samplingSettings;
 
         this.samplingSettings.forEach( x => x.addEventListener( "input", () => this.updateSamplingSettings() ) );
 
@@ -254,13 +255,16 @@ class Femtoscope {
     updateSamplingSettings() {
 
         // just update the properties with the values of the inputs
-        this.sampleCount = Math.max( parseInt( this.sampleCountInput.value ), 8 );
+        this.sampleCount  = Math.max( parseInt( this.sampleCountInput.value ), 8 );
 
-        const voltage1   = parseFloat( this.minVoltageInput.value );
-        const voltage2   = parseFloat( this.maxVoltageInput.value );
+        const voltage1    = parseFloat( this.minVoltageInput.value );
+        const voltage2    = parseFloat( this.maxVoltageInput.value );
 
-        this.voltageMin  = Math.min( voltage1, voltage2 );
-        this.voltageMax  = Math.max( voltage1, voltage2 );
+        this.voltageMin   = Math.min( voltage1, voltage2 );
+        this.voltageMax   = Math.max( voltage1, voltage2 );
+
+        // send a request to the arduino to change the sampling rate
+        var newSampleRate = Math.max( parseInt( this.sampleRateInput.value  ), 0 );
     }
 }
 

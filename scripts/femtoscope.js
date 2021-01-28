@@ -19,7 +19,7 @@ class Femtoscope {
         this.pointsfft   = [];
 
         // time per sample and bool true when paused
-        this.sampleTime  = null;
+        this.sampleTime  = 2e-4;
         this.paused      = false;
 
         // vars to hold info about the sampling
@@ -38,12 +38,6 @@ class Femtoscope {
         // the button that fits data to graph
         this.fitDataButton = document.getElementById("fit-data");
         this.fitDataButton.onclick = () => this.fitToData();
-
-        // get all the inputs that control sampling settings
-        this.samplingSettings = ["sample-rate", "sample-count", "voltage-range-min", "voltage-range-max"].map( id => document.getElementById(id) );
-        [this.sampleRateInput, this.sampleCountInput, this.minVoltageInput, this.maxVoltageInput] = this.samplingSettings;
-
-        this.samplingSettings.forEach( x => x.addEventListener( "input", () => this.updateSamplingSettings() ) );
 
         // the windowing function that femtoscope uses (hamming)
         this.windowFunction = (n, N) => 0.53836 - 0.46164 * Math.cos( 6.28318 * n / N );
@@ -67,17 +61,28 @@ class Femtoscope {
             new Stat("dc-average-stat",   () => Stat.numberAndSuffix( getDCAverage(this.points)                           , "v"  ) ),
             new Stat("frequency-stat",    () => Stat.numberAndSuffix( getMaxIndex(this.pointsfft) / (this.sampleTime * this.pointsfft.length * 2), "hz" ) )
         ];
+
+        // get all the inputs that control sampling settings
+        this.samplingSettings = ["sample-rate", "sample-count", "voltage-range-min", "voltage-range-max"].map( id => document.getElementById(id) );
+        [this.sampleRateInput, this.sampleCountInput, this.minVoltageInput, this.maxVoltageInput] = this.samplingSettings;
+
+        // connect the sampling settings inputs to their callback functions
+        this.sampleCountInput.addEventListener( "input", () => this.updateSampleCount()  );
+        this.minVoltageInput.addEventListener(  "input", () => this.updateVoltageRange() );
+        this.maxVoltageInput.addEventListener(  "input", () => this.updateVoltageRange() );
+        this.sampleRateInput.addEventListener(  "input", () => this.updateSamplingRate() );
+
+        // process the data we've collected once each second
+        this.processingInterval = setInterval( () => this.processData(), 200 );
+
+        // start the continuous points update loop
+        this.continuousUpdatePoints();
     }
 
     async collectData(reader) {
 
         // listen to data coming from the serial device
-
         this.unpause();
-
-        // number of points collected since last update
-        var pointsCollected = 0;
-        var startTime = performance.now();
 
         while( true ) {
 
@@ -87,12 +92,7 @@ class Femtoscope {
             // if the reader is lost then handle this
             if( done ) return this.serialConnection.readerLost();
 
-            if( this.paused ) {
-
-                pointsCollected = 0;
-                startTime = performance.now();
-                continue;
-            }
+            if( this.paused ) continue;
 
             // make a new array of voltage datapoints from the values array
             var newPoints = Array.from( value ).map( this.uInt8ToVoltage );
@@ -100,32 +100,8 @@ class Femtoscope {
             // add the points onto the existing array
             this.points = this.points.concat( newPoints );
 
-            // update the number of collected points
-            pointsCollected += newPoints.length;
-
             // trim old points from start of array
             if(this.points.length > this.sampleCount) this.points = this.points.splice( this.points.length - this.sampleCount );
-
-            // if we're on continuous triggering we want to update the graph points every time we get them
-            if( this.triggering.mode == TriggerModes.CONTINUOUS ) this.updateGraphPoints();
-        
-            // processData when we've collected enough points
-            if(pointsCollected >= this.sampleCount) {
-
-                // calculate and set sample rate
-                const nowTime = performance.now();
-                var timeTaken = (nowTime - startTime) / 1000;
-                this.sampleTime = timeTaken / pointsCollected * 0.05 + (this.sampleTime ?? timeTaken / pointsCollected) * 0.95;
-
-                // call data processing and graph updating functions
-                this.processData();
-                this.updateGraphPoints();
-                this.triggerAdjust();
-
-                // reset collection metrics
-                pointsCollected = 0;
-                startTime = performance.now();
-            }
         }
     }
 
@@ -148,6 +124,9 @@ class Femtoscope {
 
     processData( startTime, endTime ) {
 
+        // if we have no data then do nothing
+        if( !this.points.length ) return;
+
         console.log("processing data...");
 
         // pass points through window function and then fft
@@ -157,6 +136,9 @@ class Femtoscope {
         this.pointsfft = fft( windowedPoints );
 
         this.waveformStats.forEach( stat => stat.update() );
+
+        this.updateGraphPoints();
+        this.triggerAdjust();
     }
 
     updateGraphPoints() {
@@ -168,6 +150,14 @@ class Femtoscope {
         // update the graph points
         var n = -dn;
         this.graph.points = pointsToUse.map( x => new vec2(n+=dn, x) );  
+    }
+
+    continuousUpdatePoints() {
+
+        // if we're on continuous triggering we want to update the graph points every frame
+        if( this.triggering.mode == TriggerModes.CONTINUOUS ) this.updateGraphPoints();
+
+        requestAnimationFrame( () => this.continuousUpdatePoints() );
     }
 
     triggerAdjust() {
@@ -210,12 +200,13 @@ class Femtoscope {
         this.graph.drawVerticalLine(   this.graph.mousePosOnCanvas.x );
         this.graph.drawHorizontalLine( this.graph.mousePosOnCanvas.y );
 
+        // set the line back to solid
         ctx.setLineDash([]);
     }
 
     togglefft() {
 
-        // toggles whether we show the fft
+        // toggle whether we show the fft
         this.showfft ^= 1;
 
         // set the fft button to show the correct value
@@ -252,22 +243,32 @@ class Femtoscope {
         this.graph.setRange( vec2.lerp( centre, bottomLeft, 1.2 ), vec2.lerp( centre, topRight, 1.2 ) );
     }
 
-    updateSamplingSettings() {
+    updateSampleCount() {
 
-        // just update the properties with the values of the inputs
+        // update the sampleCount with the value of the input
         this.sampleCount  = Math.max( parseInt( this.sampleCountInput.value ), 8 );
+    }
 
-        const voltage1    = parseFloat( this.minVoltageInput.value );
-        const voltage2    = parseFloat( this.maxVoltageInput.value );
+    updateVoltageRange() {
 
-        this.voltageMin   = Math.min( voltage1, voltage2 );
-        this.voltageMax   = Math.max( voltage1, voltage2 );
+        // get 2 voltages from the 2 inputs
+        const voltage1  = parseFloat( this.minVoltageInput.value );
+        const voltage2  = parseFloat( this.maxVoltageInput.value )        
 
-        // send a request to the arduino to change the sampling rate
-        var newSampleRate = Math.max( parseFloat( this.sampleRateInput.value  ), 0 );
+        // set min and max voltages
+        this.voltageMin = Math.min( voltage1, voltage2 );
+        this.voltageMax = Math.max( voltage1, voltage2 );
+    }
 
-        // only send the sampling rate if we have the port
-        if( this.serialConnection.port ) this.serialConnection.sendSamplingRate( newSampleRate );
+    updateSamplingRate() {
+
+        // get the new sampling rate from the input
+        var newSamplingRate = Math.max( parseFloat( this.sampleRateInput.value  ), 1e-4 );
+
+        // send the sampling rate but only if we have a serial port connection
+        if( this.serialConnection.port ) this.serialConnection.sendSamplingRate( newSamplingRate );
+
+        this.sampleTime = 1 / newSamplingRate;
     }
 }
 

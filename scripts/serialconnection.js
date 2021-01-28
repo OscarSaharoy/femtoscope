@@ -29,7 +29,7 @@ class SerialConnection {
             console.log("got port!");
 
             // open the port and get the reader object
-            await this.port.open({ baudRate: 500000 });
+            await this.port.open({ baudRate: 115200 });
             console.log("opened port!");
 
             this.reader = this.port.readable.getReader();
@@ -42,7 +42,8 @@ class SerialConnection {
         catch(err) {
             
             // error occurs when user doesn't select a serial port
-            console.log("failed to connect :(", err);
+            console.log("failed to connect :(");
+            console.log(err);
 
             // reset button and exit function
             this.setButton( "connect to serial 🔌", () => this.connectToSerial() );
@@ -60,17 +61,22 @@ class SerialConnection {
             console.log("oops :( data collection error:");
             console.log(err);
 
-            await this.disconnectFromSerial();
+            // just set the port to null, everything is messed up
+            this.port = null;
 
+            // set the button to reflect the state
             this.setButton( "lost connection 😞 click to reconnect", () => this.connectToSerial() );
         }
     }
 
     sendSamplingRate( rate ) {
 
-        // get the 4 bytes of the new sampling rate as a float
+        // calculate microseconds per sample
+        const microsPerSample = 1e6 / rate;
+
+        // get the 4 bytes of that number's float representation
         const buffer = new ArrayBuffer(4);
-        ( new Float32Array(buffer) )[0] = rate;
+        ( new Float32Array(buffer) )[0] = microsPerSample;
         const bytes = new Uint8Array( buffer );
 
         // write those 4 bytes to the serial connection
@@ -79,9 +85,9 @@ class SerialConnection {
 
     readerLost() {
 
+        // release the reader and writer locks
         this.reader.releaseLock();
         this.writer.releaseLock();
-        this.port = null;
         
         console.log("serial port lost...");
     }

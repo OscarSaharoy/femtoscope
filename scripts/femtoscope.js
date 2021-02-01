@@ -47,7 +47,7 @@ class Femtoscope {
         this.uInt8ToVoltage = char   => char / 256.0 * (this.voltageMax - this.voltageMin) + this.voltageMin;
 
         // some helper functions that find some of the stats
-        const getMaxIndex  = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 1) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
+        const getMaxIndex  = arr =>   arr.reduce( (best, x, i) => (x > best.val && i > 2) ? {val: x, ind: i} : best, {val:0, ind:0} ).ind;
         const getRMS       = arr => ( arr.reduce( (Sx2,  x   ) => Sx2 + x*x, 0 ) / arr.length ) ** 0.5;
         const getDCAverage = arr =>   arr.reduce( (Sx,   x   ) => Sx  + x,   0 ) / arr.length;
 
@@ -77,6 +77,12 @@ class Femtoscope {
 
         // start the continuous points update loop
         this.continuousUpdatePoints();
+
+        // bind spacebar to toggle pause/play
+        window.addEventListener( "keydown", e => { 
+            if( e.code == "Space" ) {
+                e.preventDefault(); this.togglePause();
+            } } );
     }
 
     async collectData(reader) {
@@ -269,6 +275,9 @@ class Femtoscope {
         if( this.serialConnection.port ) this.serialConnection.sendSamplingRate( newSamplingRate );
 
         this.sampleTime = 1 / newSamplingRate;
+
+        this.updateGraphPoints();
+        this.fitToData();
     }
 }
 

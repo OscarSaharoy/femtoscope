@@ -29,7 +29,7 @@ class SerialConnection {
             console.log("got port!");
 
             // open the port and get the reader object
-            await this.port.open({ baudRate: 115200 });
+            await this.port.open({ baudRate: 1e+6 });
             console.log("opened port!");
 
             this.reader = this.port.readable.getReader();

@@ -160,8 +160,9 @@ class Femtoscope {
 
     continuousUpdatePoints() {
 
-        // if we're on continuous triggering we want to update the graph points every frame
-        if( this.triggering.mode == TriggerModes.CONTINUOUS ) this.updateGraphPoints();
+        // if we're on continuous or single triggering we want to update the graph points every frame
+        if( [ TriggerModes.SINGLE, TriggerModes.CONTINUOUS ].includes( this.triggering.mode ) )  
+            this.updateGraphPoints() + this.triggerAdjust();
 
         requestAnimationFrame( () => this.continuousUpdatePoints() );
     }
@@ -180,11 +181,12 @@ class Femtoscope {
         // if no suitable points are found, return
         if( !triggerPoints.length ) return;
 
-        // pause if we're in triggering mode single
-        if(this.triggering.mode == TriggerModes.SINGLE) this.pause();
-
         var triggerCrossingPoint = triggerPoints.reduce( (acc, cur) => Math.abs(this.triggering.diamondPos.x - cur.x) < Math.abs(acc.x - cur.x) ? cur : acc, triggerPoints[0] );
         this.graph.points = this.graph.points.map( v => vec2.add( v, new vec2(this.triggering.diamondPos.x - triggerCrossingPoint.x, 0) ) );
+
+        // pause if we're in triggering mode single and the diamond is around the middle of the trace
+        const dx = this.graph.points[this.graph.points.length - 1].x - this.graph.points[0].x;
+        if(this.triggering.mode == TriggerModes.SINGLE && ( this.triggering.diamondPos.x - this.graph.points[0].x ) / dx < 0.55 ) this.pause();
     }
 
     setCursor() {
